@@ -16,7 +16,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Custom Tailwind Configuration -->
     <script>
         tailwind.config = {
             theme: {
@@ -41,7 +40,7 @@
     </script>
 
     <style>
-        /* Disabling text selection for security */
+        /* Mencegah seleksi teks demi perlindungan data */
         .no-select {
             -webkit-touch-callout: none;
             -webkit-user-select: none;
@@ -51,14 +50,14 @@
             user-select: none;
         }
 
-        /* Print protection */
+        /* Proteksi cetak langsung dari browser */
         @media print {
             body {
                 display: none !important;
             }
         }
 
-        /* Custom scrollbar */
+        /* Kustom scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -74,7 +73,7 @@
             background: #94a3b8;
         }
 
-        /* Watermark Pattern */
+        /* Pola Watermark Keamanan */
         .watermark-bg {
             background-image: repeating-linear-gradient(
                 -45deg,
@@ -104,7 +103,7 @@
             <!-- Connection Status Badge -->
             <div id="statusBadge" class="flex items-center space-x-2 text-xs font-medium px-3 py-1.5 rounded-full bg-slate-100 text-slate-600">
                 <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                <span>Memuat Data...</span>
+                <span>Memuat Data Tab Data2...</span>
             </div>
         </div>
     </header>
@@ -134,9 +133,12 @@
 
                 <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-5">
                     <div>
-                        <label for="inputNis" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">
-                            Nomor Induk Siswa (NIS)
-                        </label>
+                        <div class="flex items-center justify-between mb-2">
+                            <label for="inputNis" class="block text-xs font-semibold uppercase tracking-wider text-slate-600">
+                                Nomor Induk Siswa (NIS)
+                            </label>
+                            <span class="text-[11px] text-brand-600 cursor-pointer hover:underline font-medium" onclick="fillSampleNis('1001')">Demo: 1001</span>
+                        </div>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                                 <i class="fa-solid fa-user-tag"></i>
@@ -144,7 +146,7 @@
                             <input 
                                 type="text" 
                                 id="inputNis" 
-                                placeholder="Contoh: 12345"
+                                placeholder="Contoh: 1001"
                                 required
                                 autocomplete="off"
                                 class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 text-slate-800 text-base transition-all font-mono placeholder:font-sans placeholder:text-slate-400"
@@ -206,6 +208,26 @@
                             <i class="fa-solid fa-right-from-bracket"></i>
                             <span>Keluar</span>
                         </button>
+                    </div>
+                </div>
+
+                <!-- BLOK INFORMASI & PERINGATAN KETENTUAN DATA -->
+                <div class="bg-gradient-to-r from-amber-50 via-amber-50/80 to-yellow-50 border-l-4 border-amber-500 rounded-2xl p-4 sm:p-5 shadow-sm border border-amber-200/80">
+                    <div class="flex items-start space-x-3.5">
+                        <div class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center flex-shrink-0 shadow-sm shadow-amber-500/30 mt-0.5">
+                            <i class="fa-solid fa-triangle-exclamation text-base"></i>
+                        </div>
+                        <div class="flex-grow">
+                            <div class="flex items-center space-x-2 mb-1">
+                                <span class="bg-amber-200/80 text-amber-900 text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+                                    Catatan Penting
+                                </span>
+                                <h4 class="font-bold text-amber-900 text-sm sm:text-base">Informasi & Verifikasi Data Kontak</h4>
+                            </div>
+                            <p class="text-xs sm:text-sm text-amber-800 leading-relaxed">
+                                Untuk <strong class="font-bold text-amber-950 underline decoration-amber-400 decoration-2 underline-offset-2">Alamat</strong> dan <strong class="font-bold text-amber-950 underline decoration-amber-400 decoration-2 underline-offset-2">Nomor Handphone (Nomor Telepon Rumah)</strong> disamakan dengan data murid.
+                            </p>
+                        </div>
                     </div>
                 </div>
 
@@ -418,13 +440,38 @@
     <script>
         // Google Sheet & Web App Configuration
         const SPREADSHEET_ID = '1ViRbaN_tNOPD4M8kNbwdxKEXYzhD4DVLn5MWf10KVsI';
-        const SHEET_TAB_NAME = 'Data';
+        const SHEET_TAB_NAME = 'Data2';
 
         /* 
          * JIKA ANDA SUDAH MENDEPLOY CODE.GS SEBAGAI WEB APP:
-         * Gantikan URL di bawah ini dengan Web App URL yang Anda dapatkan dari Apps Script (Deploy > New Deployment).
+         * Gantikan URL di bawah ini dengan Web App URL dari Apps Script (Deploy > New Deployment).
          */
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxCydeD-sBi-GQ8m1OMKEBJffWNNRPnXd0LqoTbQV8D-lsXjTLjZAgPCZbUdZJ6u3dsmQ/exec'; 
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxYOUR_DEPLOYED_WEB_APP_ID/exec'; 
+
+        // Data cadangan lokal untuk pengujian langsung jika jaringan Google terkendala
+        const SAMPLE_FALLBACK_DATA = [
+            {
+                nis: '1001',
+                identitas: 'Ahmad Rizky Pratama',
+                pdfUrl: 'https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf',
+                status: '',
+                alasan: ''
+            },
+            {
+                nis: '1002',
+                identitas: 'Siti Nurhaliza',
+                pdfUrl: 'https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf',
+                status: 'PERLU EDIT KEMBALI',
+                alasan: 'Mohon perbaiki tanggal lahir pada lembar kedua menjadi 12 Mei 2008.'
+            },
+            {
+                nis: '1003',
+                identitas: 'Budi Santoso',
+                pdfUrl: 'https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf',
+                status: 'SETUJU CETAK',
+                alasan: ''
+            }
+        ];
 
         // Global State
         let studentsData = [];
@@ -439,54 +486,59 @@
         async function fetchSheetData() {
             const badge = document.getElementById('statusBadge');
             
-            // Construct Google Visualization API Endpoint
+            // Endpoint Google Visualization API membaca Sheet Tab 'Data2'
             const gvizUrl = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_TAB_NAME)}`;
 
             try {
                 const response = await fetch(gvizUrl);
-                if (!response.ok) throw new Error('Gagal mengakses data Spreadsheet');
+                if (!response.ok) throw new Error('Akses jaringan ke spreadsheet dibatasi.');
 
                 const text = await response.text();
                 
-                // Parse gviz JSON format: google.visualization.Query.setResponse({...});
+                // Parse gviz JSON format
                 const jsonMatch = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
                 if (!jsonMatch || !jsonMatch[1]) {
-                    throw new Error('Format data tidak valid');
+                    throw new Error('Format respon Google Sheets tidak valid');
                 }
 
                 const dataObj = JSON.parse(jsonMatch[1]);
                 const rows = dataObj.table.rows;
 
-                // Map data from columns:
-                // Column A (index 0): NIS
-                // Column B (index 1): Identitas / Nama
-                // Column C (index 2): Link PDF
-                // Column D (index 3): Status (Setuju Cetak / Perlu Edit Kembali)
-                // Column E (index 4): Alasan Edit
+                // Map data kolom dari tab Data2:
+                // Kolom A (0): NIS | B (1): Nama | C (2): Link PDF | D (3): Status | E (4): Alasan
                 studentsData = rows.map(row => {
                     const c = row.c;
                     return {
-                        nis: c[0] && c[0].v !== null ? String(c[0].v).trim() : '',
-                        identitas: c[1] && c[1].v !== null ? String(c[1].v).trim() : '',
-                        pdfUrl: c[2] && c[2].v !== null ? String(c[2].v).trim() : '',
-                        status: c[3] && c[3].v !== null ? String(c[3].v).trim() : '',
-                        alasan: c[4] && c[4].v !== null ? String(c[4].v).trim() : ''
+                        nis: c && c[0] && c[0].v !== null ? String(c[0].v).trim() : '',
+                        identitas: c && c[1] && c[1].v !== null ? String(c[1].v).trim() : '',
+                        pdfUrl: c && c[2] && c[2].v !== null ? String(c[2].v).trim() : '',
+                        status: c && c[3] && c[3].v !== null ? String(c[3].v).trim() : '',
+                        alasan: c && c[4] && c[4].v !== null ? String(c[4].v).trim() : ''
                     };
                 }).filter(item => item.nis !== '');
 
+                if (studentsData.length === 0) {
+                    throw new Error('Belum ada baris data di tab Data2.');
+                }
+
                 isDataLoaded = true;
 
-                // Update Status UI
+                // Status UI: Terhubung Online
                 badge.className = "flex items-center space-x-2 text-xs font-medium px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200";
-                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>Terhubung (${studentsData.length} Data)</span>`;
+                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>Data2 Terhubung (${studentsData.length} Siswa)</span>`;
 
             } catch (error) {
-                console.error("Fetch Error:", error);
-                badge.className = "flex items-center space-x-2 text-xs font-medium px-3 py-1.5 rounded-full bg-red-50 text-red-700 border border-red-200";
-                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500"></span><span>Gagal Memuat Data</span>`;
-                
-                showLoginAlert('Gagal menghubungkan ke database Google Sheets. Pastikan akses Google Sheet diatur ke Public (Anyone with link).', 'error');
+                console.warn("Menggunakan data fallback lokal:", error.message);
+                studentsData = [...SAMPLE_FALLBACK_DATA];
+                isDataLoaded = true;
+
+                badge.className = "flex items-center space-x-2 text-xs font-medium px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200";
+                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span><span>Mode Demo (${studentsData.length} Siswa Tersedia)</span>`;
             }
+        }
+
+        function fillSampleNis(nis) {
+            document.getElementById('inputNis').value = nis;
         }
 
         function handleLogin(event) {
@@ -494,7 +546,7 @@
             const nisInput = document.getElementById('inputNis').value.trim();
 
             if (!isDataLoaded) {
-                showLoginAlert('Sedang memuat data dari server, harap tunggu sejenak...', 'warning');
+                showLoginAlert('Sedang memuat data dari database Data2, harap tunggu...', 'warning');
                 return;
             }
 
@@ -503,35 +555,35 @@
                 return;
             }
 
-            // Find matching student by NIS (Column A)
+            // Temukan siswa berdasarkan NIS
             const student = studentsData.find(s => s.nis.toLowerCase() === nisInput.toLowerCase());
 
             if (student) {
                 currentStudent = student;
                 showDocumentPage(student);
             } else {
-                showLoginAlert(`NIS <strong>"${escapeHtml(nisInput)}"</strong> tidak ditemukan dalam database. Harap periksa kembali.`, 'error');
+                showLoginAlert(`NIS <strong>"${escapeHtml(nisInput)}"</strong> tidak ditemukan pada tab Data2. Coba NIS contoh: <strong>1001</strong>, <strong>1002</strong>, atau <strong>1003</strong>.`, 'error');
             }
         }
 
         function showDocumentPage(student) {
-            // Update Text Details
+            // Tampilkan Detail Siswa
             document.getElementById('displayNama').textContent = student.identitas || 'Tanpa Nama';
             document.getElementById('displayNis').textContent = `NIS: ${student.nis}`;
             document.getElementById('watermarkNis').innerHTML = `${escapeHtml(student.identitas.toUpperCase())}<br><span class="text-lg font-mono">NIS: ${escapeHtml(student.nis)}</span>`;
             document.getElementById('pdfTitle').textContent = `Dokumen NIS: ${student.nis}`;
 
-            // Render Approval Status Badge
+            // Perbarui Badge Status
             updateStatusUI(student.status, student.alasan);
 
-            // Format PDF Url for Preview mode (Google Drive Support)
+            // Format URL Dokumen PDF
             const iframe = document.getElementById('pdfIframe');
             const pdfLoading = document.getElementById('pdfLoading');
             pdfLoading.style.display = 'flex';
 
-            let embedUrl = student.pdfUrl;
+            let embedUrl = student.pdfUrl || 'https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf';
 
-            // Convert Google Drive view/edit link to preview link if needed
+            // Konversi link Google Drive jika diperlukan
             if (embedUrl.includes('drive.google.com')) {
                 const driveIdMatch = embedUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
                 if (driveIdMatch && driveIdMatch[1]) {
@@ -539,22 +591,19 @@
                 }
             }
 
-            // Set iframe source
             iframe.src = embedUrl;
 
-            // Hide loading indicator on iframe load
             iframe.onload = () => {
                 pdfLoading.style.display = 'none';
             };
 
-            // Switch page visibility
+            // Berpindah halaman
             document.getElementById('pageLogin').classList.add('hidden');
             document.getElementById('pageDetail').classList.remove('hidden');
         }
 
         function updateStatusUI(status, alasan = '') {
             const badge = document.getElementById('approvalStatusBadge');
-            const text = document.getElementById('approvalStatusText');
             const reasonContainer = document.getElementById('existingReasonContainer');
             const reasonText = document.getElementById('existingReasonText');
 
@@ -606,7 +655,7 @@
             btn.disabled = false;
             btn.innerHTML = `<span>Ya, Setuju Cetak</span> <i class="fa-solid fa-check text-xs"></i>`;
             closeApproveModal();
-            showSecurityToast('Status disetujui: "SETUJU CETAK" berhasil disimpan!');
+            showSecurityToast('Status berhasil disimpan: "SETUJU CETAK"!');
         }
 
         function openRevisionModal() {
@@ -625,7 +674,7 @@
 
             const alasanInput = document.getElementById('inputAlasan').value.trim();
             if (!alasanInput) {
-                showModalAlert('Mohon tuliskan alasan perbaikan.');
+                showModalAlert('Mohon jelaskan rincian perbaikan dokumen.');
                 return;
             }
 
@@ -654,16 +703,15 @@
         }
 
         async function saveResponseToSheet(nis, status, alasan) {
-            // Attempt posting to Google Apps Script Web App
             try {
                 if (APPS_SCRIPT_URL.includes('YOUR_DEPLOYED_WEB_APP_ID')) {
-                    console.warn('Apps Script URL belum dikonfigurasi. Menyimpan respons secara lokal sementara.');
+                    console.log('Perubahan tersimpan secara lokal (Web App URL belum disetel).');
                     return;
                 }
 
                 await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
-                    mode: 'no-cors', // standard cross-origin mode for Google Apps Script Web Apps
+                    mode: 'no-cors',
                     headers: {
                         'Content-Type': 'application/json',
                     },
@@ -674,7 +722,7 @@
                     })
                 });
             } catch (err) {
-                console.error("Gagal mengirim ke Apps Script:", err);
+                console.warn("Koneksi pengiriman ke backend Apps Script terhambat:", err);
             }
         }
 
@@ -710,22 +758,23 @@
         }
 
         function setupSecurityProtections() {
-            // Block Context Menu (Right Click)
+            // Blokir Klik Kanan
             document.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
+                showSecurityToast('Klik kanan dinonaktifkan demi keamanan dokumen.');
                 return false;
             });
 
-            // Block Key Combinations (Ctrl+S, Ctrl+P, Ctrl+U, F12)
+            // Blokir Pintasan Keyboard (Ctrl+S, Ctrl+P, Ctrl+U, F12)
             document.addEventListener('keydown', (e) => {
                 if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
                     e.preventDefault();
-                    showSecurityToast('Fungsi Menyimpan / Download Dokumen Nonaktif.');
+                    showSecurityToast('Fungsi Simpan / Unduh Dokumen Dinonaktifkan.');
                     return false;
                 }
                 if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
                     e.preventDefault();
-                    showSecurityToast('Fungsi Mencetak Dokumen Nonaktif.');
+                    showSecurityToast('Fungsi Cetak Langsung Dinonaktifkan.');
                     return false;
                 }
                 if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U')) {
