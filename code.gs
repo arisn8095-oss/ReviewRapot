@@ -1,7 +1,7 @@
 /**
  * GOOGLE APPS SCRIPT BACKEND FOR DOKUMEN SISWA
  * Spreadsheet ID: 1ViRbaN_tNOPD4M8kNbwdxKEXYzhD4DVLn5MWf10KVsI
- * Sheet Tab Name: Data
+ * Sheet Tab Name: Data2
  * 
  * Kolom yang digunakan:
  * - Kolom A (1): NIS (Pencarian)
@@ -13,11 +13,11 @@
  */
 
 const SPREADSHEET_ID = '1ViRbaN_tNOPD4M8kNbwdxKEXYzhD4DVLn5MWf10KVsI';
-const SHEET_NAME = 'Data';
+const SHEET_NAME = 'Data2';
 
 /**
  * FUNGSI OTOMATIS MEMBUAT & MEMFORMAT DATABASE GOOGLE SHEET
- * Jalankan fungsi ini 1x dari Apps Script Editor untuk menyiapkan header & data contoh.
+ * Jalankan fungsi ini 1x dari Apps Script Editor untuk menyiapkan header tab Data2 & data contoh.
  */
 function setupDatabase() {
   var ss;
@@ -31,7 +31,7 @@ function setupDatabase() {
     throw new Error('Spreadsheet tidak ditemukan. Pastikan SPREADSHEET_ID valid.');
   }
 
-  // Cari atau buat tab 'Data'
+  // Cari atau buat tab 'Data2'
   var sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) {
     sheet = ss.insertSheet(SHEET_NAME);
@@ -45,7 +45,7 @@ function setupDatabase() {
   var headerRange = sheet.getRange(1, 1, 1, 6);
   headerRange.setValues(headers);
 
-  // Styling Visual Header
+  // Visual Styling Header
   headerRange.setBackground('#0284c7'); // Biru Brand
   headerRange.setFontColor('#ffffff');
   headerRange.setFontWeight('bold');
@@ -56,9 +56,9 @@ function setupDatabase() {
   // 2. Isi Data Contoh / Dummy (Jika baris masih kosong)
   if (sheet.getLastRow() <= 1) {
     var sampleData = [
-      ['1001', 'Ahmad Rizky Pratama', 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', '', '', ''],
-      ['1002', 'Siti Nurhaliza', 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', '', '', ''],
-      ['1003', 'Budi Santoso', 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', '', '', '']
+      ['1001', 'Ahmad Rizky Pratama', 'https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf', '', '', ''],
+      ['1002', 'Siti Nurhaliza', 'https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf', 'PERLU EDIT KEMBALI', 'Mohon perbaiki tanggal lahir pada lembar kedua menjadi 12 Mei 2008.', ''],
+      ['1003', 'Budi Santoso', 'https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf', 'SETUJU CETAK', '', '']
     ];
     sheet.getRange(2, 1, sampleData.length, 6).setValues(sampleData);
   }
@@ -72,17 +72,17 @@ function setupDatabase() {
 
   // 4. Atur Lebar Kolom agar Rapih
   sheet.setColumnWidth(1, 110); // NIS
-  sheet.setColumnWidth(2, 220); // Identitas / Nama
-  sheet.setColumnWidth(3, 350); // Link PDF
-  sheet.setColumnWidth(4, 180); // Status
-  sheet.setColumnWidth(5, 280); // Alasan
-  sheet.setColumnWidth(6, 180); // Waktu Konfirmasi
+  sheet.setColumnWidth(2, 230); // Identitas / Nama
+  sheet.setColumnWidth(3, 350); // Link Dokumen PDF
+  sheet.setColumnWidth(4, 190); // Status Persetujuan
+  sheet.setColumnWidth(5, 300); // Alasan Edit Kembali
+  sheet.setColumnWidth(6, 190); // Waktu Konfirmasi
 
-  // Bekukan Baris Header (Freeze Top Row)
+  // Bekukan Baris Header
   sheet.setFrozenRows(1);
 
-  Logger.log('Database Google Sheet berhasil disiapkan!');
-  return 'Database "Data" berhasil dibuat dan disiapkan!';
+  Logger.log('Database tab Data2 berhasil disiapkan!');
+  return 'Database tab "Data2" berhasil dibuat dan disiapkan!';
 }
 
 /**
@@ -90,12 +90,12 @@ function setupDatabase() {
  */
 function doPost(e) {
   var lock = LockService.getScriptLock();
-  // Tunggu maksimal 10 detik untuk menghindari konflik baris saat pengiriman bersamaan
+  // Tunggu maksimal 10 detik untuk menghindari konflik penulisan bersamaan
   lock.tryLock(10000);
 
   try {
     if (!e || !e.postData || !e.postData.contents) {
-      return createJsonResponse('error', 'Tidak ada data yang dikirimkan.');
+      return createJsonResponse('error', 'Tidak ada payload data yang diterima.');
     }
 
     var requestData = JSON.parse(e.postData.contents);
@@ -105,18 +105,16 @@ function doPost(e) {
     var timestamp = new Date();
 
     if (!targetNis) {
-      return createJsonResponse('error', 'NIS tidak valid.');
+      return createJsonResponse('error', 'NIS siswa wajib diisi.');
     }
 
-    // Buka spreadsheet dan sheet 'Data'
     var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     var sheet = ss.getSheetByName(SHEET_NAME);
 
     if (!sheet) {
-      return createJsonResponse('error', 'Sheet "Data" tidak ditemukan.');
+      return createJsonResponse('error', 'Sheet "' + SHEET_NAME + '" tidak ditemukan.');
     }
 
-    // Ambil seluruh data baris
     var values = sheet.getDataRange().getValues();
     var foundIndex = -1;
 
@@ -124,42 +122,39 @@ function doPost(e) {
     for (var i = 1; i < values.length; i++) {
       var currentNis = String(values[i][0]).trim();
       if (currentNis.toLowerCase() === targetNis.toLowerCase()) {
-        foundIndex = i + 1; // Konversi index array ke nomor baris spreadsheet (1-based index)
+        foundIndex = i + 1; // Konversi index array ke baris spreadsheet
         break;
       }
     }
 
     if (foundIndex === -1) {
-      return createJsonResponse('error', 'NIS "' + targetNis + '" tidak ditemukan.');
+      return createJsonResponse('error', 'NIS "' + targetNis + '" tidak ditemukan di tab ' + SHEET_NAME);
     }
 
-    // Update data ke Google Sheet:
-    // Baris: foundIndex, Kolom 4 (Kolom D) = Status
-    // Baris: foundIndex, Kolom 5 (Kolom E) = Alasan
-    // Baris: foundIndex, Kolom 6 (Kolom F) = Timestamp
+    // Simpan pembaruan status, alasan, dan waktu konfirmasi
     sheet.getRange(foundIndex, 4).setValue(newStatus);
     sheet.getRange(foundIndex, 5).setValue(newAlasan);
     sheet.getRange(foundIndex, 6).setValue(timestamp);
 
-    return createJsonResponse('success', 'Status dan alasan berhasil diperbarui.');
+    return createJsonResponse('success', 'Status untuk NIS ' + targetNis + ' berhasil diperbarui.');
 
   } catch (err) {
-    return createJsonResponse('error', 'Terjadi kesalahan server: ' + err.toString());
+    return createJsonResponse('error', 'Kesalahan server: ' + err.toString());
   } finally {
     lock.releaseLock();
   }
 }
 
 /**
- * Endpoint GET opsional untuk verifikasi kesehatan Web App
+ * Endpoint GET untuk pengecekan status server Web App
  */
 function doGet(e) {
-  return ContentService.createTextOutput("Backend Web App Cek Dokumen Siswa Aktif.")
+  return ContentService.createTextOutput("Backend Web App Dokumen Siswa (Tab Data2) Aktif dan Berjalan.")
     .setMimeType(ContentService.MimeType.TEXT);
 }
 
 /**
- * Helper untuk membuat response JSON dengan standar CORS
+ * Helper untuk membuat response JSON
  */
 function createJsonResponse(result, message) {
   var output = JSON.stringify({
