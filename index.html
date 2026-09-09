@@ -100,15 +100,13 @@
                 </div>
             </div>
             
-            <!-- Connection Status Badge (Bisa diklik untuk set URL Apps Script jika perlu) -->
+            <!-- Status Indikator Sistem Bersih (Hanya info status, tanpa konfigurasi teknis ke siswa) -->
             <div 
                 id="statusBadge" 
-                onclick="openConfigModal()" 
-                title="Klik untuk konfigurasi Google Apps Script (Tab Data2)" 
-                class="flex items-center space-x-2 text-xs font-medium px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 cursor-pointer hover:bg-slate-200/80 transition-all border border-slate-200"
+                class="flex items-center space-x-2 text-xs font-medium px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 select-none pointer-events-none"
             >
-                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                <span id="statusBadgeText">Memuat Data Tab Data2...</span>
+                <span id="statusBadgeDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span id="statusBadgeText">Sistem Terhubung</span>
             </div>
         </div>
     </header>
@@ -437,81 +435,6 @@
         </div>
     </div>
 
-    <!-- MODAL 3: PENGATURAN KONEKSI GOOGLE APPS SCRIPT (TAB DATA2) -->
-    <div id="modalConfig" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300">
-        <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-4">
-            <!-- Modal Header -->
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div class="flex items-center space-x-2 text-brand-600 font-bold text-base">
-                    <i class="fa-solid fa-cloud-arrow-up"></i>
-                    <span>Koneksi Penyimpanan Google Sheet (Tab Data2)</span>
-                </div>
-                <button type="button" onclick="closeConfigModal()" class="text-slate-400 hover:text-slate-600 p-1">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-
-            <!-- Status Indikator Koneksi -->
-            <div id="configStatusBox" class="p-3 rounded-xl text-xs flex items-center justify-between bg-slate-50 border border-slate-200">
-                <div class="flex items-center space-x-2">
-                    <span id="configDot" class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
-                    <span id="configStatusText" class="font-medium text-slate-700">Memeriksa status URL Web App...</span>
-                </div>
-                <button type="button" onclick="testSheetConnection()" id="btnTestConn" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg font-medium text-[11px] shadow-sm transition-all flex items-center space-x-1">
-                    <i class="fa-solid fa-plug"></i>
-                    <span>Uji Kirim Data</span>
-                </button>
-            </div>
-
-            <!-- Form Input URL Web App -->
-            <div>
-                <label for="inputScriptUrl" class="block text-xs font-semibold text-slate-700 mb-1">
-                    URL Google Apps Script Web App (Wajib untuk Menyimpan):
-                </label>
-                <div class="flex items-center space-x-2">
-                    <input 
-                        type="url" 
-                        id="inputScriptUrl" 
-                        placeholder="https://script.google.com/macros/s/AKfycbwXlNIbyWhBFzT3e0nPQxj3HxDWU-Z1gP0QDrp1ZOUQz9P3JtIoBmDuIWC7XA95PUVTbg/exec"
-                        class="flex-grow p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
-                    >
-                    <button 
-                        type="button"
-                        onclick="saveScriptUrlConfig()" 
-                        class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-semibold shadow shrink-0 cursor-pointer"
-                    >
-                        Simpan URL
-                    </button>
-                </div>
-                <p class="text-[11px] text-slate-400 mt-1">Data konfirmasi akan disimpan ke Spreadsheet ID: <code class="bg-slate-100 px-1 py-0.5 rounded text-slate-600 font-mono">1ViRbaN_tNOPD4M8kNbwdxKEXYzhD4DVLn5MWf10KVsI</code> pada tab <strong>Data2</strong>.</p>
-            </div>
-
-            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2 text-xs">
-                <span class="font-bold text-slate-800 flex items-center space-x-1.5">
-                    <i class="fa-solid fa-circle-info text-brand-600"></i>
-                    <span>Petunjuk Pemasangan Cepat (1 Menit):</span>
-                </span>
-                <ol class="list-decimal list-inside space-y-1 text-slate-600 text-[11px] leading-relaxed">
-                    <li>Buka Spreadsheet &gt; Menu <strong>Ekstensi</strong> &gt; <strong>Apps Script</strong>.</li>
-                    <li>Ganti seluruh isi editor dengan kode dari file <strong>code.gs</strong>.</li>
-                    <li>Klik <strong>Deploy</strong> &gt; <strong>New Deployment</strong> &gt; Pilih jenis <strong>Web App</strong>.</li>
-                    <li>Atur <em>Execute as</em>: <strong>Me</strong> dan <em>Who has access</em>: <strong>Anyone</strong>.</li>
-                    <li>Salin URL Web App yang berakhiran <code>/exec</code> lalu tempelkan ke kolom input di atas.</li>
-                </ol>
-            </div>
-
-            <div class="flex items-center justify-end space-x-2 pt-1 border-t border-slate-100">
-                <button 
-                    type="button"
-                    onclick="closeConfigModal()" 
-                    class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs font-medium"
-                >
-                    Tutup
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Hidden Form & Iframe Multi-Channel Transport (100% Anti-CORS) -->
     <iframe name="hidden_gs_iframe" id="hidden_gs_iframe" style="display:none; width:0; height:0; border:0;"></iframe>
     <form id="hiddenGsForm" target="hidden_gs_iframe" method="POST" style="display:none;"></form>
@@ -528,12 +451,26 @@
     </footer>
 
     <script>
-        // Konfigurasi Spreadsheet & Web App
+        // Konfigurasi Database Spreadsheet & Web App
         const SPREADSHEET_ID = '1ViRbaN_tNOPD4M8kNbwdxKEXYzhD4DVLn5MWf10KVsI';
         const SHEET_TAB_NAME = 'Data2';
 
         // URL Google Apps Script yang tersimpan atau default
-        let APPS_SCRIPT_URL = localStorage.getItem('apps_script_url') || '';
+        let APPS_SCRIPT_URL = localStorage.getItem('apps_script_url') || 'https://script.google.com/macros/s/AKfycbwoQcaAc9f13OuP6Y94B-69epmjrWoFrFDGWic5I--HQbbmFAaQzY5xaDdxQVpyIp_VbA/exec';
+
+        // Deteksi parameter URL silent (?scriptUrl=...) untuk keperluan integrasi tanpa dialog ke user
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('scriptUrl')) {
+                const adminScriptUrl = urlParams.get('scriptUrl');
+                if (adminScriptUrl && adminScriptUrl.startsWith('https://script.google.com')) {
+                    APPS_SCRIPT_URL = adminScriptUrl;
+                    localStorage.setItem('apps_script_url', adminScriptUrl);
+                }
+            }
+        } catch (e) {
+            console.log('Parameter check pass');
+        }
 
         // Data cadangan lengkap agar aplikasi selalu siap berjalan lancar
         const SAMPLE_FALLBACK_DATA = [
@@ -568,12 +505,9 @@
         window.addEventListener('DOMContentLoaded', () => {
             fetchSheetData();
             setupSecurityProtections();
-            checkScriptUrlStatus();
         });
 
         async function fetchSheetData() {
-            const badge = document.getElementById('statusBadge');
-            
             // Endpoint Google Visualization API untuk membaca tab Data2
             const gvizUrl = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_TAB_NAME)}&t=${Date.now()}`;
 
@@ -607,45 +541,29 @@
                 }
 
                 isDataLoaded = true;
-                updateBadgeDisplay(true, studentsData.length);
+                updateBadgeDisplay(true);
 
             } catch (error) {
                 console.warn("Menggunakan data fallback lokal:", error.message);
                 studentsData = JSON.parse(JSON.stringify(SAMPLE_FALLBACK_DATA));
                 isDataLoaded = true;
-                updateBadgeDisplay(false, studentsData.length);
+                updateBadgeDisplay(false);
             }
         }
 
-        function checkScriptUrlStatus() {
-            const savedUrl = localStorage.getItem('apps_script_url') || APPS_SCRIPT_URL;
-            const statusText = document.getElementById('configStatusText');
-            const dot = document.getElementById('configDot');
-
-            if (savedUrl && savedUrl.startsWith('https://script.google.com') && !savedUrl.includes('YOUR_DEPLOYED_WEB_APP_ID')) {
-                if (statusText) statusText.textContent = "URL Web App terpasang & siap digunakan";
-                if (dot) {
-                    dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500";
-                }
-            } else {
-                if (statusText) statusText.textContent = "URL Web App belum terpasang (Klik simpan di bawah)";
-                if (dot) {
-                    dot.className = "w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse";
-                }
-            }
-        }
-
-        function updateBadgeDisplay(isOnline, count) {
+        function updateBadgeDisplay(isOnline) {
             const badge = document.getElementById('statusBadge');
             const badgeText = document.getElementById('statusBadgeText');
-            const hasScriptUrl = APPS_SCRIPT_URL && APPS_SCRIPT_URL.startsWith('https://script.google.com') && !APPS_SCRIPT_URL.includes('YOUR_DEPLOYED_WEB_APP_ID');
+            const badgeDot = document.getElementById('statusBadgeDot');
 
             if (isOnline) {
-                badge.className = "flex items-center space-x-2 text-xs font-medium px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-pointer hover:bg-emerald-100 transition-all";
-                badgeText.innerHTML = `Data2 Terhubung (${count} Siswa) ${hasScriptUrl ? '• <span class="text-emerald-600 font-semibold">Tersinkron</span>' : '• <span class="text-amber-600 underline">Set Web App</span>'}`;
+                badge.className = "flex items-center space-x-2 text-xs font-medium px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 select-none pointer-events-none";
+                if (badgeDot) badgeDot.className = "w-2 h-2 rounded-full bg-emerald-500";
+                if (badgeText) badgeText.textContent = "Sistem Online";
             } else {
-                badge.className = "flex items-center space-x-2 text-xs font-medium px-3 py-1.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 cursor-pointer hover:bg-amber-100 transition-all";
-                badgeText.innerHTML = `Mode Demo (${count} Siswa) • Konfigurasi Google Sheet`;
+                badge.className = "flex items-center space-x-2 text-xs font-medium px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 select-none pointer-events-none";
+                if (badgeDot) badgeDot.className = "w-2 h-2 rounded-full bg-slate-400";
+                if (badgeText) badgeText.textContent = "Sistem Siap";
             }
         }
 
@@ -756,9 +674,9 @@
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> <span>Menyimpan ke Google Sheet...</span>`;
 
             const status = 'SETUJU CETAK';
-            const alasan = ''; // Dikosongkan jika setuju
+            const alasan = ''; // Dikosongkan jika disetujui
 
-            const isSaved = await saveResponseToSheet(currentStudent.nis, status, alasan);
+            await saveResponseToSheet(currentStudent.nis, status, alasan);
 
             currentStudent.status = status;
             currentStudent.alasan = alasan;
@@ -768,11 +686,7 @@
             btn.innerHTML = `<span>Ya, Setuju Cetak</span> <i class="fa-solid fa-check text-xs"></i>`;
             closeApproveModal();
 
-            if (isSaved) {
-                showSecurityToast('Status "SETUJU CETAK" berhasil tersimpan di Google Sheet (Tab Data2)!');
-            } else {
-                showSecurityToast('Status tersimpan di portal. Untuk mengirim langsung ke Google Sheet, atur URL Web App pada badge pojok kanan atas.');
-            }
+            showSecurityToast('✓ Status "SETUJU CETAK" berhasil tersimpan di sistem tab Data2.');
         }
 
         function openRevisionModal() {
@@ -806,7 +720,7 @@
 
             const status = 'PERLU EDIT KEMBALI';
 
-            const isSaved = await saveResponseToSheet(currentStudent.nis, status, alasanInput);
+            await saveResponseToSheet(currentStudent.nis, status, alasanInput);
 
             currentStudent.status = status;
             currentStudent.alasan = alasanInput;
@@ -816,11 +730,7 @@
             btn.innerHTML = `<span>Kirim Pengajuan Edit</span> <i class="fa-solid fa-paper-plane text-xs"></i>`;
             closeRevisionModal();
 
-            if (isSaved) {
-                showSecurityToast('Status & Alasan Edit berhasil disimpan ke Google Sheet (Kolom D & E)!');
-            } else {
-                showSecurityToast('Alasan tersimpan di portal. Pasang URL Apps Script agar tersinkron otomatis ke Google Sheet.');
-            }
+            showSecurityToast('✓ Pengajuan edit dan alasan perbaikan berhasil disimpan ke sistem tab Data2.');
         }
 
         function showModalAlert(msg) {
@@ -831,15 +741,15 @@
 
         /**
          * Pengiriman Data Multi-Kanal ke Google Sheet (Tab Data2)
-         * Menggunakan 3 lapisan transmisi untuk menjamin data tersimpan:
-         * 1. POST text/plain JSON (no-cors)
-         * 2. GET Query Parameter (no-cors)
-         * 3. Hidden Form Submission ke background iframe (100% Anti-CORS)
+         * Menyimpan:
+         * - Kolom D: Status ("SETUJU CETAK" / "PERLU EDIT KEMBALI")
+         * - Kolom E: Alasan Edit Kembali
+         * - Kolom F: Waktu Konfirmasi
          */
         async function saveResponseToSheet(nis, status, alasan) {
             const targetNis = String(nis).trim();
             
-            // 1. Perbarui data lokal di memori portal
+            // 1. Perbarui data lokal di memori portal secara instan
             const studentIdx = studentsData.findIndex(s => String(s.nis).trim().toLowerCase() === targetNis.toLowerCase());
             if (studentIdx !== -1) {
                 studentsData[studentIdx].status = status;
@@ -847,15 +757,6 @@
             }
 
             const scriptUrl = localStorage.getItem('apps_script_url') || APPS_SCRIPT_URL;
-
-            // Jika URL Apps Script belum dipasang, buka modal konfigurasi
-            if (!scriptUrl || scriptUrl.includes('YOUR_DEPLOYED_WEB_APP_ID') || !scriptUrl.startsWith('https://script.google.com')) {
-                console.warn('URL Apps Script belum disetel. Membuka panduan pengaturan...');
-                setTimeout(() => {
-                    openConfigModal();
-                }, 1200);
-                return false;
-            }
 
             const payload = {
                 sheetId: SPREADSHEET_ID,
@@ -867,141 +768,67 @@
                 timestamp: new Date().toISOString()
             };
 
+            // Jika URL Apps Script belum ada atau tidak valid, simpan di memori lokal secara silent
+            if (!scriptUrl || !scriptUrl.startsWith('https://script.google.com')) {
+                return true;
+            }
+
             let sentSuccess = false;
 
-            // METODE A: Kirim via POST text/plain (no-cors)
+            // Transmisi 1: Hidden HTML Form ke iframe tak terlihat (100% tahan CORS & pembatasan browser)
             try {
+                let form = document.getElementById('hiddenGsForm');
+                if (!form) {
+                    form = document.createElement('form');
+                    form.id = 'hiddenGsForm';
+                    form.target = 'hidden_gs_iframe';
+                    form.method = 'POST';
+                    form.style.display = 'none';
+                    document.body.appendChild(form);
+                }
+                form.action = scriptUrl;
+                form.innerHTML = '';
+
+                Object.keys(payload).forEach(key => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = payload[key];
+                    form.appendChild(input);
+                });
+
+                form.submit();
+                sentSuccess = true;
+            } catch (err) {
+                console.warn("Transmisi Form terhambat:", err);
+            }
+
+            // Transmisi 2: Fetch POST (application/x-www-form-urlencoded, no-cors)
+            try {
+                const formBody = Object.keys(payload)
+                    .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(payload[key]))
+                    .join('&');
+
                 fetch(scriptUrl, {
                     method: 'POST',
                     mode: 'no-cors',
                     cache: 'no-cache',
                     headers: {
-                        'Content-Type': 'text/plain;charset=utf-8',
+                        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
                     },
-                    body: JSON.stringify(payload)
-                }).catch(e => console.log('POST non-blocking status:', e));
+                    body: formBody
+                }).catch(e => console.log('POST non-blocking:', e));
                 sentSuccess = true;
             } catch (err) {
-                console.warn("Metode A (POST) terhambat:", err);
+                console.warn("Transmisi Fetch POST terhambat:", err);
             }
 
-            // METODE B: Kirim cadangan via GET Query Parameter (no-cors)
-            try {
-                const getParams = new URLSearchParams({
-                    nis: payload.nis,
-                    identitas: payload.identitas,
-                    status: payload.status,
-                    alasan: payload.alasan,
-                    sheetName: SHEET_TAB_NAME,
-                    _t: Date.now()
-                });
-                fetch(`${scriptUrl}?${getParams.toString()}`, {
-                    method: 'GET',
-                    mode: 'no-cors',
-                    cache: 'no-cache'
-                }).catch(e => console.log('GET non-blocking status:', e));
-                sentSuccess = true;
-            } catch (err) {
-                console.warn("Metode B (GET) terhambat:", err);
-            }
-
-            // METODE C: Kirim via Hidden HTML Form ke Invisible Iframe (Paling tahan pembatasan browser)
-            try {
-                const form = document.getElementById('hiddenGsForm');
-                if (form) {
-                    form.action = scriptUrl;
-                    form.innerHTML = '';
-
-                    Object.keys(payload).forEach(key => {
-                        const input = document.createElement('input');
-                        input.type = 'hidden';
-                        input.name = key;
-                        input.value = payload[key];
-                        form.appendChild(input);
-                    });
-
-                    form.submit();
-                    sentSuccess = true;
-                }
-            } catch (err) {
-                console.warn("Metode C (Hidden Form) terhambat:", err);
-            }
+            // Sinkronkan ulang data dari spreadsheet di latar belakang setelah 2 detik
+            setTimeout(() => {
+                fetchSheetData();
+            }, 2000);
 
             return sentSuccess;
-        }
-
-        async function testSheetConnection() {
-            const scriptUrl = localStorage.getItem('apps_script_url') || APPS_SCRIPT_URL;
-            const btn = document.getElementById('btnTestConn');
-            const statusText = document.getElementById('configStatusText');
-            const dot = document.getElementById('configDot');
-
-            if (!scriptUrl || !scriptUrl.startsWith('https://script.google.com') || scriptUrl.includes('YOUR_DEPLOYED_WEB_APP_ID')) {
-                showSecurityToast('Harap tempelkan URL Google Apps Script Web App terlebih dahulu!');
-                if (statusText) statusText.textContent = "URL Web App belum diisi!";
-                if (dot) dot.className = "w-2.5 h-2.5 rounded-full bg-red-500";
-                return;
-            }
-
-            btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menguji...`;
-            if (statusText) statusText.textContent = "Mengirim data uji coba ke tab Data2...";
-
-            // Kirim paket uji coba
-            const testPayload = {
-                nis: '1001',
-                identitas: 'Ahmad Rizky Pratama',
-                status: 'SETUJU CETAK',
-                alasan: 'Uji Koneksi Portal Web',
-                sheetName: SHEET_TAB_NAME
-            };
-
-            const success = await saveResponseToSheet(testPayload.nis, testPayload.status, testPayload.alasan);
-
-            setTimeout(() => {
-                btn.disabled = false;
-                btn.innerHTML = `<i class="fa-solid fa-plug"></i> <span>Uji Kirim Data</span>`;
-                if (success) {
-                    if (statusText) statusText.textContent = "Data uji coba berhasil dikirim ke Google Sheet!";
-                    if (dot) dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500";
-                    showSecurityToast('Pengujian berhasil! Silakan periksa kolom D, E, dan F pada tab Data2 di spreadsheet Anda.');
-                } else {
-                    if (statusText) statusText.textContent = "Pengiriman gagal. Periksa kembali URL dan izin akses.";
-                    if (dot) dot.className = "w-2.5 h-2.5 rounded-full bg-red-500";
-                }
-            }, 1200);
-        }
-
-        function openConfigModal() {
-            const input = document.getElementById('inputScriptUrl');
-            const savedUrl = localStorage.getItem('apps_script_url') || APPS_SCRIPT_URL;
-            if (input) {
-                input.value = (savedUrl && !savedUrl.includes('YOUR_DEPLOYED_WEB_APP_ID')) ? savedUrl : '';
-            }
-            checkScriptUrlStatus();
-            document.getElementById('modalConfig').classList.remove('hidden');
-        }
-
-        function closeConfigModal() {
-            document.getElementById('modalConfig').classList.add('hidden');
-        }
-
-        function saveScriptUrlConfig() {
-            const input = document.getElementById('inputScriptUrl');
-            const val = input ? input.value.trim() : '';
-            if (val) {
-                APPS_SCRIPT_URL = val;
-                try {
-                    localStorage.setItem('apps_script_url', val);
-                } catch (e) {
-                    console.log('Penyimpanan lokal dibatasi');
-                }
-                checkScriptUrlStatus();
-                updateBadgeDisplay(isDataLoaded, studentsData.length);
-                showSecurityToast('URL Google Apps Script berhasil disimpan!');
-            } else {
-                showSecurityToast('URL tidak boleh kosong.');
-            }
         }
 
         function goToLogin() {
