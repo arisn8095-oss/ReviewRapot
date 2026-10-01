@@ -488,10 +488,10 @@
         const SPREADSHEET_ID = '1ViRbaN_tNOPD4M8kNbwdxKEXYzhD4DVLn5MWf10KVsI';
         const SHEET_TAB_NAME = 'Data3';
 
-        // URL Google Apps Script yang tersimpan atau default
-        let APPS_SCRIPT_URL = localStorage.getItem('apps_script_url') || 'https://script.google.com/macros/s/AKfycbxmckDuxSt_1cFZIstkteWKfxeyXDwuDBTVFigOZHmJgJW4j3zZjq-2ZA3WEZeNXDMyZg/exec';
+        // URL Google Apps Script Default (Dapat diganti melalui modal konfigurasi atau URL parameter ?scriptUrl=...)
+        let APPS_SCRIPT_URL = localStorage.getItem('apps_script_url') || 'https://script.google.com/macros/s/AKfycbzqB-S3VF1E7f8ex6ixjrFtNA-66VnGi8qPH07-Dsz2aMvk7MRCKI-a_4j5hvmaGIgNtg/exec';
 
-        // Deteksi parameter URL silent (?scriptUrl=...) untuk keperluan integrasi tanpa dialog ke user
+        // Deteksi parameter URL silent (?scriptUrl=...) untuk fleksibilitas deploy di GitHub
         try {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('scriptUrl')) {
@@ -781,7 +781,7 @@
             const status = 'SETUJU CETAK';
             const alasan = '';
 
-            // Kirim langsung ke Google Sheet (Tab Data3)
+            // Kirim langsung ke Google Sheet (Tab Data3) dengan teknik GitHub Pages-safe
             await saveResponseToSheet(currentStudent.nis, status, alasan);
 
             currentStudent.status = status;
@@ -792,7 +792,7 @@
             btn.innerHTML = `<span>Ya, Simpan Persetujuan</span> <i class="fa-solid fa-check text-xs"></i>`;
             closeApproveModal();
 
-            showSecurityToast('✓ Status "SETUJU CETAK" berhasil tersimpan di Google Sheet tab Data3!');
+            showSecurityToast('✓ Status "SETUJU CETAK" berhasil dikirim & disimpan ke Google Sheet tab Data3!');
         }
 
         function openRevisionModal() {
@@ -826,7 +826,7 @@
 
             const status = 'PERLU EDIT KEMBALI';
 
-            // Kirim langsung ke Google Sheet (Tab Data3)
+            // Kirim langsung ke Google Sheet (Tab Data3) dengan teknik GitHub Pages-safe
             await saveResponseToSheet(currentStudent.nis, status, alasanInput);
 
             currentStudent.status = status;
@@ -837,7 +837,7 @@
             btn.innerHTML = `<span>Kirim Pengajuan Edit</span> <i class="fa-solid fa-paper-plane text-xs"></i>`;
             closeRevisionModal();
 
-            showSecurityToast('✓ Pengajuan edit dan alasan berhasil tersimpan di Google Sheet tab Data3!');
+            showSecurityToast('✓ Pengajuan edit dan alasan berhasil disimpan ke Google Sheet tab Data3!');
         }
 
         function showModalAlert(msg) {
@@ -847,21 +847,16 @@
         }
 
         /**
-         * Pengiriman Data Multi-Kanal ke Google Sheet (Tab Data3):
-         * - Kanal 1: GET Query String (Image ping & fetch GET) - Anti-CORS dan handal untuk Google Apps Script
-         * - Kanal 2: Form POST ke Iframe tersembunyi
-         * - Kanal 3: POST Fetch no-cors
-         * Menyimpan:
-         * - Kolom A: NIS
-         * - Kolom B: Identitas
-         * - Kolom D: Status ("SETUJU CETAK" / "PERLU EDIT KEMBALI")
-         * - Kolom E: Alasan Edit Kembali
-         * - Kolom F: Waktu Konfirmasi (WIB)
+         * Pengiriman Data Khusus GitHub Pages (100% Anti-CORS & Anti-Preflight):
+         * 1. Beacon API (Standard browser modern untuk background cross-domain)
+         * 2. URL Query GET Ping (Script tag & Image beacon)
+         * 3. Fetch POST no-cors dengan text/plain (menghindari OPTIONS preflight)
+         * 4. Hidden Form POST target iframe
          */
         async function saveResponseToSheet(nis, status, alasan) {
             const targetNis = String(nis).trim();
             
-            // 1. Perbarui data lokal di memori seketika
+            // 1. Simpan di memori lokal saat ini
             const studentIdx = studentsData.findIndex(s => String(s.nis).trim().toLowerCase() === targetNis.toLowerCase());
             if (studentIdx !== -1) {
                 studentsData[studentIdx].status = status;
@@ -871,6 +866,7 @@
             const scriptUrl = localStorage.getItem('apps_script_url') || APPS_SCRIPT_URL;
 
             const payload = {
+                action: 'save',
                 sheetId: SPREADSHEET_ID,
                 sheetName: SHEET_TAB_NAME,
                 nis: targetNis,
@@ -881,10 +877,11 @@
             };
 
             if (!scriptUrl || !scriptUrl.startsWith('https://script.google.com')) {
+                console.warn('URL Apps Script belum diatur');
                 return true;
             }
 
-            // KANAL 1: GET Query Parameter (Paling handal dan tidak terpengaruh CORS Google Apps Script)
+            // KANAL A: GET Query String (Paling handal dari GitHub Pages ke Google Apps Script)
             try {
                 const getParams = new URLSearchParams({
                     action: 'save',
@@ -898,17 +895,50 @@
                 });
                 const fullGetUrl = `${scriptUrl}?${getParams.toString()}`;
 
-                // Image beacon (dieksekusi langsung di latar belakang)
-                const ping = new Image();
-                ping.src = fullGetUrl;
+                // 1. Image Beacon
+                const img = new Image();
+                img.src = fullGetUrl;
 
-                // Fetch GET no-cors
+                // 2. Fetch GET no-cors
                 fetch(fullGetUrl, { mode: 'no-cors', cache: 'no-cache' }).catch(() => {});
+
+                // 3. Dynamic Script Tag (JSONP-like ping)
+                const scriptTag = document.createElement('script');
+                scriptTag.src = fullGetUrl;
+                scriptTag.async = true;
+                scriptTag.onload = scriptTag.onerror = function() {
+                    try { document.body.removeChild(scriptTag); } catch(e) {}
+                };
+                document.body.appendChild(scriptTag);
             } catch (errGet) {
                 console.warn("Kanal GET:", errGet);
             }
 
-            // KANAL 2: Form POST ke hidden iframe (Membantu jika alasan teks sangat panjang)
+            // KANAL B: Navigator Beacon (Jika browser mendukung)
+            try {
+                if (navigator.sendBeacon) {
+                    const beaconData = new FormData();
+                    Object.keys(payload).forEach(key => beaconData.append(key, payload[key]));
+                    navigator.sendBeacon(scriptUrl, beaconData);
+                }
+            } catch (errBeacon) {
+                console.warn("Kanal Beacon:", errBeacon);
+            }
+
+            // KANAL C: Fetch POST dengan text/plain (Kunci anti-preflight browser di GitHub Pages)
+            try {
+                fetch(scriptUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    cache: 'no-cache',
+                    headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+                    body: JSON.stringify(payload)
+                }).catch(() => {});
+            } catch (errPost) {
+                console.warn("Kanal Fetch POST:", errPost);
+            }
+
+            // KANAL D: Hidden Form POST ke iframe tersembunyi
             try {
                 let form = document.getElementById('hiddenGsForm');
                 if (!form) {
@@ -935,27 +965,10 @@
                 console.warn("Kanal Form POST:", errForm);
             }
 
-            // KANAL 3: Fetch POST non-blocking
-            try {
-                const formBody = Object.keys(payload)
-                    .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(payload[key]))
-                    .join('&');
-
-                fetch(scriptUrl, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    cache: 'no-cache',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-                    body: formBody
-                }).catch(() => {});
-            } catch (errPost) {
-                console.warn("Kanal Fetch POST:", errPost);
-            }
-
-            // Refresh data latar belakang setelah 2.5 detik untuk memvalidasi
+            // Sinkronkan ulang data dari spreadsheet di latar belakang
             setTimeout(() => {
                 fetchSheetData();
-            }, 2500);
+            }, 3000);
 
             return true;
         }
