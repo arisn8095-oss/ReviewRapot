@@ -97,16 +97,16 @@
                 <div>
                     <h1 class="font-bold text-slate-900 text-lg leading-tight">Portal Dokumen Resmi</h1>
                     <p class="text-xs text-slate-500">Sistem Verifikasi & Persetujuan Dokumen</p>
-                </div>
-            </div>
-            
-            <!-- Status Indikator Sistem -->
+            <!-- Status Indikator Sistem Bersih (Hanya info status, tanpa konfigurasi teknis ke siswa) -->
             <div 
                 id="statusBadge" 
-                class="flex items-center space-x-2 text-xs font-medium px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 select-none pointer-events-none"
+                class="flex items-center space-x-2 text-xs font-medium px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 select-none cursor-pointer transition-all hover:bg-slate-200"
+                onclick="openConfigModal()"
+                title="Klik untuk melihat atau mengatur URL Google Apps Script Web App"
             >
                 <span id="statusBadgeDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
                 <span id="statusBadgeText">Sistem Terhubung</span>
+                <i class="fa-solid fa-sliders text-[10px] text-slate-400 ml-1"></i>
             </div>
         </div>
     </header>
@@ -249,26 +249,28 @@
                     </div>
 
                     <div class="flex items-center space-x-3 w-full md:w-auto justify-end">
-                        <!-- Button 1: SETUJU CETAK -->
+                        <!-- Button 1: SETUJU CETAK (Selalu aktif & menyimpan ke Google Sheet) -->
                         <button 
                             type="button"
                             onclick="confirmApprove()" 
                             id="btnApprove"
-                            class="flex-1 md:flex-initial px-5 py-3 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl font-semibold text-xs sm:text-sm shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center space-x-2 cursor-pointer"
+                            class="flex-1 md:flex-initial px-5 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl font-semibold text-xs sm:text-sm shadow-md shadow-emerald-600/25 transition-all flex items-center justify-center space-x-2 cursor-pointer border border-emerald-500"
+                            title="Klik untuk menyetujui dokumen dan menyimpan status SETUJU CETAK ke Google Sheet"
                         >
                             <i class="fa-solid fa-circle-check text-base"></i>
-                            <span>SETUJU CETAK</span>
+                            <span id="btnApproveLabel">SETUJU CETAK</span>
                         </button>
 
-                        <!-- Button 2: PERLU EDIT KEMBALI -->
+                        <!-- Button 2: PERLU EDIT KEMBALI (Selalu aktif & menyimpan catatan ke Google Sheet) -->
                         <button 
                             type="button"
                             onclick="openRevisionModal()" 
                             id="btnRevise"
-                            class="flex-1 md:flex-initial px-5 py-3 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white rounded-xl font-semibold text-xs sm:text-sm shadow-md shadow-amber-500/20 transition-all flex items-center justify-center space-x-2 cursor-pointer"
+                            class="flex-1 md:flex-initial px-5 py-3 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white rounded-xl font-semibold text-xs sm:text-sm shadow-md shadow-amber-500/25 transition-all flex items-center justify-center space-x-2 cursor-pointer border border-amber-400"
+                            title="Klik jika ada data yang salah dan kirim catatan revisi ke Google Sheet"
                         >
                             <i class="fa-solid fa-pen-to-square text-base"></i>
-                            <span>PERLU EDIT KEMBALI</span>
+                            <span id="btnReviseLabel">PERLU EDIT KEMBALI</span>
                         </button>
                     </div>
                 </div>
@@ -411,7 +413,7 @@
             
             <h3 class="text-lg font-bold text-slate-900">Konfirmasi Setuju Cetak</h3>
             <p class="text-xs text-slate-500 leading-relaxed">
-                Apakah Anda yakin bahwa seluruh data dan isi dokumen sudah <strong>benar dan sesuai</strong>? Setelah disetujui, status <strong>SETUJU CETAK</strong> akan disimpan ke Google Sheet (Tab Data3) dan dokumen siap dicetak.
+                Apakah Anda yakin bahwa seluruh data dan isi dokumen sudah <strong>benar dan sesuai</strong>? Setelah disetujui, status <strong>SETUJU CETAK</strong> akan disimpan langsung ke Google Sheet (Tab Data3) beserta waktu konfirmasi.
             </p>
 
             <div class="flex items-center justify-center space-x-3 pt-2">
@@ -428,9 +430,40 @@
                     id="btnConfirmApprove"
                     class="w-1/2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-semibold shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
                 >
-                    <span>Ya, Setuju Cetak</span>
+                    <span>Ya, Simpan Persetujuan</span>
                     <i class="fa-solid fa-check text-xs"></i>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: PENGATURAN KONEKSI GOOGLE APPS SCRIPT (OPSIONAL) -->
+    <div id="modalConfig" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-md w-full overflow-hidden p-6 space-y-4">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-2">
+                    <i class="fa-solid fa-cloud-arrow-up text-brand-600"></i>
+                    <span>Koneksi Google Apps Script</span>
+                </h3>
+                <button type="button" onclick="closeConfigModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+            <p class="text-xs text-slate-500 leading-relaxed">
+                URL Web App Google Apps Script digunakan untuk menulis status <strong>SETUJU CETAK</strong> &amp; <strong>PERLU EDIT KEMBALI</strong> ke tab <strong>Data3</strong>.
+            </p>
+            <div>
+                <label for="inputScriptUrl" class="block text-xs font-semibold text-slate-700 mb-1">URL Deployment Web App:</label>
+                <input 
+                    type="text" 
+                    id="inputScriptUrl" 
+                    placeholder="https://script.google.com/macros/s/.../exec"
+                    class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 focus:ring-2 focus:ring-brand-500"
+                >
+            </div>
+            <div class="flex items-center justify-end space-x-2 pt-2">
+                <button type="button" onclick="closeConfigModal()" class="px-3 py-2 text-xs border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-100">Tutup</button>
+                <button type="button" onclick="saveConfigUrl()" class="px-4 py-2 text-xs bg-brand-600 text-white font-semibold rounded-xl hover:bg-brand-700">Simpan URL</button>
             </div>
         </div>
     </div>
@@ -456,7 +489,7 @@
         const SHEET_TAB_NAME = 'Data3';
 
         // URL Google Apps Script yang tersimpan atau default
-        let APPS_SCRIPT_URL = localStorage.getItem('apps_script_url') || 'https://script.google.com/macros/s/AKfycbxpV4xsgncuE9582fV6b7nHeyDMHZ34qWf95ErD_nh8pnW2XNQy-Av7L63tEXJd2HUEoA/exec';
+        let APPS_SCRIPT_URL = localStorage.getItem('apps_script_url') || 'https://script.google.com/macros/s/AKfycbxmckDuxSt_1cFZIstkteWKfxeyXDwuDBTVFigOZHmJgJW4j3zZjq-2ZA3WEZeNXDMyZg/exec';
 
         // Deteksi parameter URL silent (?scriptUrl=...) untuk keperluan integrasi tanpa dialog ke user
         try {
@@ -672,12 +705,32 @@
             const badge = document.getElementById('approvalStatusBadge');
             const reasonContainer = document.getElementById('existingReasonContainer');
             const reasonText = document.getElementById('existingReasonText');
+            const btnApprove = document.getElementById('btnApprove');
+            const btnRevise = document.getElementById('btnRevise');
+            const btnApproveLabel = document.getElementById('btnApproveLabel');
+            const btnReviseLabel = document.getElementById('btnReviseLabel');
+
+            // Reset gaya visual tombol agar selalu aktif dan siap menerima aksi
+            if (btnApprove && btnRevise) {
+                btnApprove.disabled = false;
+                btnRevise.disabled = false;
+                btnApprove.className = "flex-1 md:flex-initial px-5 py-3 rounded-xl font-semibold text-xs sm:text-sm transition-all flex items-center justify-center space-x-2 cursor-pointer shadow-md";
+                btnRevise.className = "flex-1 md:flex-initial px-5 py-3 rounded-xl font-semibold text-xs sm:text-sm transition-all flex items-center justify-center space-x-2 cursor-pointer shadow-md";
+            }
 
             if (status === 'SETUJU CETAK') {
                 badge.className = "flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-semibold border border-emerald-300";
                 badge.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600"></i><span>✓ SETUJU CETAK</span>`;
                 reasonContainer.classList.add('hidden');
                 reasonText.textContent = '';
+
+                // Sorot tombol SETUJU CETAK sebagai pilihan saat ini, dan tombol revisi tetap aktif
+                if (btnApprove && btnRevise) {
+                    btnApprove.className += " bg-emerald-600 hover:bg-emerald-700 text-white ring-2 ring-emerald-400 ring-offset-2 shadow-emerald-600/30";
+                    btnApproveLabel.textContent = "✓ TELAH DISETUJUI";
+                    btnRevise.className += " bg-slate-100 hover:bg-amber-500 hover:text-white text-slate-700 border border-slate-300";
+                    btnReviseLabel.textContent = "UBAH KE PERLU EDIT";
+                }
             } else if (status === 'PERLU EDIT KEMBALI') {
                 badge.className = "flex items-center space-x-1.5 px-3 py-1.5 bg-amber-50 text-amber-800 rounded-lg text-xs font-semibold border border-amber-300";
                 badge.innerHTML = `<i class="fa-solid fa-pen-to-square text-amber-600"></i><span>⚠ PERLU EDIT KEMBALI</span>`;
@@ -688,10 +741,25 @@
                 } else {
                     reasonContainer.classList.add('hidden');
                 }
+
+                // Sorot tombol PERLU EDIT KEMBALI sebagai pilihan saat ini, dan tombol setuju tetap aktif
+                if (btnApprove && btnRevise) {
+                    btnRevise.className += " bg-amber-500 hover:bg-amber-600 text-white ring-2 ring-amber-400 ring-offset-2 shadow-amber-500/30";
+                    btnReviseLabel.textContent = "⚠ PENGAJUAN EDIT AKTIF";
+                    btnApprove.className += " bg-slate-100 hover:bg-emerald-600 hover:text-white text-slate-700 border border-slate-300";
+                    btnApproveLabel.textContent = "UBAH KE SETUJU CETAK";
+                }
             } else {
                 badge.className = "flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-xs font-medium border border-slate-200";
                 badge.innerHTML = `<i class="fa-solid fa-clock text-slate-500"></i><span>Belum Konfirmasi</span>`;
                 reasonContainer.classList.add('hidden');
+
+                if (btnApprove && btnRevise) {
+                    btnApprove.className += " bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/25";
+                    btnApproveLabel.textContent = "SETUJU CETAK";
+                    btnRevise.className += " bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/25";
+                    btnReviseLabel.textContent = "PERLU EDIT KEMBALI";
+                }
             }
         }
 
@@ -713,6 +781,7 @@
             const status = 'SETUJU CETAK';
             const alasan = '';
 
+            // Kirim langsung ke Google Sheet (Tab Data3)
             await saveResponseToSheet(currentStudent.nis, status, alasan);
 
             currentStudent.status = status;
@@ -720,10 +789,10 @@
             updateStatusUI(status, alasan);
 
             btn.disabled = false;
-            btn.innerHTML = `<span>Ya, Setuju Cetak</span> <i class="fa-solid fa-check text-xs"></i>`;
+            btn.innerHTML = `<span>Ya, Simpan Persetujuan</span> <i class="fa-solid fa-check text-xs"></i>`;
             closeApproveModal();
 
-            showSecurityToast('✓ Status "SETUJU CETAK" berhasil tersimpan di sistem tab Data3.');
+            showSecurityToast('✓ Status "SETUJU CETAK" berhasil tersimpan di Google Sheet tab Data3!');
         }
 
         function openRevisionModal() {
@@ -757,6 +826,7 @@
 
             const status = 'PERLU EDIT KEMBALI';
 
+            // Kirim langsung ke Google Sheet (Tab Data3)
             await saveResponseToSheet(currentStudent.nis, status, alasanInput);
 
             currentStudent.status = status;
@@ -767,27 +837,31 @@
             btn.innerHTML = `<span>Kirim Pengajuan Edit</span> <i class="fa-solid fa-paper-plane text-xs"></i>`;
             closeRevisionModal();
 
-            showSecurityToast('✓ Pengajuan edit dan alasan perbaikan berhasil disimpan ke sistem tab Data3.');
+            showSecurityToast('✓ Pengajuan edit dan alasan berhasil tersimpan di Google Sheet tab Data3!');
         }
 
         function showModalAlert(msg) {
             const modalAlert = document.getElementById('modalAlert');
-            const alertText = document.getElementById('modalAlertText');
-            if (alertText) alertText.textContent = msg;
-            if (modalAlert) modalAlert.classList.remove('hidden');
+            document.getElementById('modalAlertText').textContent = msg;
+            modalAlert.classList.remove('hidden');
         }
 
         /**
-         * Pengiriman Data Multi-Kanal ke Google Sheet (Tab Data3)
+         * Pengiriman Data Multi-Kanal ke Google Sheet (Tab Data3):
+         * - Kanal 1: GET Query String (Image ping & fetch GET) - Anti-CORS dan handal untuk Google Apps Script
+         * - Kanal 2: Form POST ke Iframe tersembunyi
+         * - Kanal 3: POST Fetch no-cors
          * Menyimpan:
+         * - Kolom A: NIS
+         * - Kolom B: Identitas
          * - Kolom D: Status ("SETUJU CETAK" / "PERLU EDIT KEMBALI")
          * - Kolom E: Alasan Edit Kembali
-         * - Kolom F: Waktu Konfirmasi
+         * - Kolom F: Waktu Konfirmasi (WIB)
          */
         async function saveResponseToSheet(nis, status, alasan) {
             const targetNis = String(nis).trim();
             
-            // 1. Perbarui data lokal di memori portal secara instan
+            // 1. Perbarui data lokal di memori seketika
             const studentIdx = studentsData.findIndex(s => String(s.nis).trim().toLowerCase() === targetNis.toLowerCase());
             if (studentIdx !== -1) {
                 studentsData[studentIdx].status = status;
@@ -806,14 +880,35 @@
                 timestamp: new Date().toISOString()
             };
 
-            // Jika URL Apps Script belum valid, simpan di memori lokal secara aman
             if (!scriptUrl || !scriptUrl.startsWith('https://script.google.com')) {
                 return true;
             }
 
-            let sentSuccess = false;
+            // KANAL 1: GET Query Parameter (Paling handal dan tidak terpengaruh CORS Google Apps Script)
+            try {
+                const getParams = new URLSearchParams({
+                    action: 'save',
+                    nis: payload.nis,
+                    identitas: payload.identitas,
+                    status: payload.status,
+                    alasan: payload.alasan,
+                    sheetId: payload.sheetId,
+                    sheetName: payload.sheetName,
+                    _t: Date.now()
+                });
+                const fullGetUrl = `${scriptUrl}?${getParams.toString()}`;
 
-            // Transmisi 1: Hidden HTML Form ke iframe tersembunyi (Aman dari pembatasan CORS)
+                // Image beacon (dieksekusi langsung di latar belakang)
+                const ping = new Image();
+                ping.src = fullGetUrl;
+
+                // Fetch GET no-cors
+                fetch(fullGetUrl, { mode: 'no-cors', cache: 'no-cache' }).catch(() => {});
+            } catch (errGet) {
+                console.warn("Kanal GET:", errGet);
+            }
+
+            // KANAL 2: Form POST ke hidden iframe (Membantu jika alasan teks sangat panjang)
             try {
                 let form = document.getElementById('hiddenGsForm');
                 if (!form) {
@@ -836,12 +931,11 @@
                 });
 
                 form.submit();
-                sentSuccess = true;
-            } catch (err) {
-                console.warn("Transmisi Form terhambat:", err);
+            } catch (errForm) {
+                console.warn("Kanal Form POST:", errForm);
             }
 
-            // Transmisi 2: Fetch POST (application/x-www-form-urlencoded)
+            // KANAL 3: Fetch POST non-blocking
             try {
                 const formBody = Object.keys(payload)
                     .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(payload[key]))
@@ -851,22 +945,42 @@
                     method: 'POST',
                     mode: 'no-cors',
                     cache: 'no-cache',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-                    },
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
                     body: formBody
-                }).catch(e => console.log('POST non-blocking:', e));
-                sentSuccess = true;
-            } catch (err) {
-                console.warn("Transmisi Fetch POST terhambat:", err);
+                }).catch(() => {});
+            } catch (errPost) {
+                console.warn("Kanal Fetch POST:", errPost);
             }
 
-            // Sinkronkan ulang data dari spreadsheet di latar belakang setelah 2.5 detik
+            // Refresh data latar belakang setelah 2.5 detik untuk memvalidasi
             setTimeout(() => {
                 fetchSheetData();
             }, 2500);
 
-            return sentSuccess;
+            return true;
+        }
+
+        function openConfigModal() {
+            const currentUrl = localStorage.getItem('apps_script_url') || APPS_SCRIPT_URL;
+            document.getElementById('inputScriptUrl').value = currentUrl;
+            document.getElementById('modalConfig').classList.remove('hidden');
+        }
+
+        function closeConfigModal() {
+            document.getElementById('modalConfig').classList.add('hidden');
+        }
+
+        function saveConfigUrl() {
+            const val = document.getElementById('inputScriptUrl').value.trim();
+            if (val && val.startsWith('https://script.google.com')) {
+                APPS_SCRIPT_URL = val;
+                localStorage.setItem('apps_script_url', val);
+                showSecurityToast('✓ URL Google Apps Script berhasil diperbarui!');
+                closeConfigModal();
+                fetchSheetData();
+            } else {
+                showSecurityToast('⚠ URL harus berawalan https://script.google.com');
+            }
         }
 
         function goToLogin() {
