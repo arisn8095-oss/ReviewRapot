@@ -100,7 +100,7 @@
                 </div>
             </div>
             
-            <!-- Status Indikator Sistem Bersih (Hanya info status, tanpa konfigurasi teknis ke siswa) -->
+            <!-- Status Indikator Sistem -->
             <div 
                 id="statusBadge" 
                 class="flex items-center space-x-2 text-xs font-medium px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 select-none pointer-events-none"
@@ -456,7 +456,7 @@
         const SHEET_TAB_NAME = 'Data3';
 
         // URL Google Apps Script yang tersimpan atau default
-        let APPS_SCRIPT_URL = localStorage.getItem('apps_script_url') || 'https://script.google.com/macros/s/AKfycbwoQcaAc9f13OuP6Y94B-69epmjrWoFrFDGWic5I--HQbbmFAaQzY5xaDdxQVpyIp_VbA/exec';
+        let APPS_SCRIPT_URL = localStorage.getItem('apps_script_url') || 'https://script.google.com/macros/s/AKfycbxpV4xsgncuE9582fV6b7nHeyDMHZ34qWf95ErD_nh8pnW2XNQy-Av7L63tEXJd2HUEoA/exec';
 
         // Deteksi parameter URL silent (?scriptUrl=...) untuk keperluan integrasi tanpa dialog ke user
         try {
@@ -508,43 +508,80 @@
         });
 
         async function fetchSheetData() {
-            // Endpoint Google Visualization API untuk membaca tab Data3
+            let loadedSuccessfully = false;
+
+            // KANAL 1: Google Visualization API (GViz)
             const gvizUrl = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_TAB_NAME)}&t=${Date.now()}`;
 
             try {
                 const response = await fetch(gvizUrl);
-                if (!response.ok) throw new Error('Akses jaringan terbatas atau sheet belum dipublikasi.');
+                if (response.ok) {
+                    const text = await response.text();
+                    const jsonMatch = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
+                    if (jsonMatch && jsonMatch[1]) {
+                        const dataObj = JSON.parse(jsonMatch[1]);
+                        const rows = dataObj.table.rows || [];
 
-                const text = await response.text();
-                const jsonMatch = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
-                if (!jsonMatch || !jsonMatch[1]) {
-                    throw new Error('Format respon Google Sheets tidak sesuai');
+                        // Pemetaan kolom: Kolom A=NIS, B=Nama, C=Link PDF, D=Status, E=Alasan
+                        const parsed = rows.map(row => {
+                            const c = row.c || [];
+                            const getVal = (cell) => {
+                                if (!cell) return '';
+                                if (cell.f !== undefined && cell.f !== null) return String(cell.f).trim();
+                                if (cell.v !== undefined && cell.v !== null) return String(cell.v).trim();
+                                return '';
+                            };
+
+                            return {
+                                nis: getVal(c[0]),
+                                identitas: getVal(c[1]),
+                                pdfUrl: getVal(c[2]),
+                                status: getVal(c[3]),
+                                alasan: getVal(c[4])
+                            };
+                        }).filter(item => {
+                            // Abaikan baris kosong atau baris header tabel
+                            return item.nis !== '' && item.nis.toLowerCase() !== 'nis';
+                        });
+
+                        if (parsed.length > 0) {
+                            studentsData = parsed;
+                            isDataLoaded = true;
+                            loadedSuccessfully = true;
+                            updateBadgeDisplay(true);
+                            console.log(`Database tab ${SHEET_TAB_NAME} termuat melalui GViz: ${parsed.length} siswa.`);
+                            return;
+                        }
+                    }
                 }
+            } catch (err) {
+                console.warn("Kanal GViz belum dapat diakses, mencoba kanal cadangan Google Apps Script:", err.message);
+            }
 
-                const dataObj = JSON.parse(jsonMatch[1]);
-                const rows = dataObj.table.rows;
-
-                // Pemetaan kolom: Kolom A=NIS, B=Nama, C=Link PDF, D=Status, E=Alasan
-                studentsData = rows.map(row => {
-                    const c = row.c;
-                    return {
-                        nis: c && c[0] && c[0].v !== null ? String(c[0].v).trim() : '',
-                        identitas: c && c[1] && c[1].v !== null ? String(c[1].v).trim() : '',
-                        pdfUrl: c && c[2] && c[2].v !== null ? String(c[2].v).trim() : '',
-                        status: c && c[3] && c[3].v !== null ? String(c[3].v).trim() : '',
-                        alasan: c && c[4] && c[4].v !== null ? String(c[4].v).trim() : ''
-                    };
-                }).filter(item => item.nis !== '');
-
-                if (studentsData.length === 0) {
-                    throw new Error('Tab Data3 masih kosong');
+            // KANAL 2: Fallback Apps Script (Aman meskipun spreadsheet berstatus privat)
+            if (!loadedSuccessfully && APPS_SCRIPT_URL && APPS_SCRIPT_URL.startsWith('https://script.google.com')) {
+                try {
+                    const fallbackUrl = `${APPS_SCRIPT_URL}?action=read&sheetId=${SPREADSHEET_ID}&sheetName=${encodeURIComponent(SHEET_TAB_NAME)}&t=${Date.now()}`;
+                    const res = await fetch(fallbackUrl);
+                    if (res.ok) {
+                        const json = await res.json();
+                        if (json && json.status === 'success' && Array.isArray(json.data) && json.data.length > 0) {
+                            studentsData = json.data;
+                            isDataLoaded = true;
+                            loadedSuccessfully = true;
+                            updateBadgeDisplay(true);
+                            console.log(`Database tab ${SHEET_TAB_NAME} termuat melalui Apps Script: ${studentsData.length} siswa.`);
+                            return;
+                        }
+                    }
+                } catch (fallbackErr) {
+                    console.warn("Kanal cadangan Apps Script dilewati:", fallbackErr.message);
                 }
+            }
 
-                isDataLoaded = true;
-                updateBadgeDisplay(true);
-
-            } catch (error) {
-                console.warn("Menggunakan data fallback lokal:", error.message);
+            // KANAL 3: Fallback Data Lokal Default
+            if (!loadedSuccessfully) {
+                console.warn("Menggunakan data demonstrasi lokal sementara.");
                 studentsData = JSON.parse(JSON.stringify(SAMPLE_FALLBACK_DATA));
                 isDataLoaded = true;
                 updateBadgeDisplay(false);
@@ -559,11 +596,11 @@
             if (isOnline) {
                 badge.className = "flex items-center space-x-2 text-xs font-medium px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 select-none pointer-events-none";
                 if (badgeDot) badgeDot.className = "w-2 h-2 rounded-full bg-emerald-500";
-                if (badgeText) badgeText.textContent = "Sistem Online";
+                if (badgeText) badgeText.textContent = "Database Terhubung";
             } else {
                 badge.className = "flex items-center space-x-2 text-xs font-medium px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 select-none pointer-events-none";
                 if (badgeDot) badgeDot.className = "w-2 h-2 rounded-full bg-slate-400";
-                if (badgeText) badgeText.textContent = "Sistem Siap";
+                if (badgeText) badgeText.textContent = "Mode Offline";
             }
         }
 
@@ -674,7 +711,7 @@
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> <span>Menyimpan ke Google Sheet...</span>`;
 
             const status = 'SETUJU CETAK';
-            const alasan = ''; // Dikosongkan jika disetujui
+            const alasan = '';
 
             await saveResponseToSheet(currentStudent.nis, status, alasan);
 
@@ -735,8 +772,9 @@
 
         function showModalAlert(msg) {
             const modalAlert = document.getElementById('modalAlert');
-            document.getElementById('modalAlertText').textContent = msg;
-            modalAlert.classList.remove('hidden');
+            const alertText = document.getElementById('modalAlertText');
+            if (alertText) alertText.textContent = msg;
+            if (modalAlert) modalAlert.classList.remove('hidden');
         }
 
         /**
@@ -768,14 +806,14 @@
                 timestamp: new Date().toISOString()
             };
 
-            // Jika URL Apps Script belum ada atau tidak valid, simpan di memori lokal secara silent
+            // Jika URL Apps Script belum valid, simpan di memori lokal secara aman
             if (!scriptUrl || !scriptUrl.startsWith('https://script.google.com')) {
                 return true;
             }
 
             let sentSuccess = false;
 
-            // Transmisi 1: Hidden HTML Form ke iframe tak terlihat (100% tahan CORS & pembatasan browser)
+            // Transmisi 1: Hidden HTML Form ke iframe tersembunyi (Aman dari pembatasan CORS)
             try {
                 let form = document.getElementById('hiddenGsForm');
                 if (!form) {
@@ -803,7 +841,7 @@
                 console.warn("Transmisi Form terhambat:", err);
             }
 
-            // Transmisi 2: Fetch POST (application/x-www-form-urlencoded, no-cors)
+            // Transmisi 2: Fetch POST (application/x-www-form-urlencoded)
             try {
                 const formBody = Object.keys(payload)
                     .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(payload[key]))
@@ -823,10 +861,10 @@
                 console.warn("Transmisi Fetch POST terhambat:", err);
             }
 
-            // Sinkronkan ulang data dari spreadsheet di latar belakang setelah 2 detik
+            // Sinkronkan ulang data dari spreadsheet di latar belakang setelah 2.5 detik
             setTimeout(() => {
                 fetchSheetData();
-            }, 2000);
+            }, 2500);
 
             return sentSuccess;
         }
