@@ -411,7 +411,7 @@
             
             <h3 class="text-lg font-bold text-slate-900">Konfirmasi Setuju Cetak</h3>
             <p class="text-xs text-slate-500 leading-relaxed">
-                Apakah Anda yakin bahwa seluruh data dan isi dokumen sudah <strong>benar dan sesuai</strong>? Setelah disetujui, status <strong>SETUJU CETAK</strong> akan disimpan ke Google Sheet (Tab Data2) dan dokumen siap dicetak.
+                Apakah Anda yakin bahwa seluruh data dan isi dokumen sudah <strong>benar dan sesuai</strong>? Setelah disetujui, status <strong>SETUJU CETAK</strong> akan disimpan ke Google Sheet (Tab Data3) dan dokumen siap dicetak.
             </p>
 
             <div class="flex items-center justify-center space-x-3 pt-2">
@@ -453,7 +453,7 @@
     <script>
         // Konfigurasi Database Spreadsheet & Web App
         const SPREADSHEET_ID = '1ViRbaN_tNOPD4M8kNbwdxKEXYzhD4DVLn5MWf10KVsI';
-        const SHEET_TAB_NAME = 'Data2';
+        const SHEET_TAB_NAME = 'Data3';
 
         // URL Google Apps Script yang tersimpan atau default
         let APPS_SCRIPT_URL = localStorage.getItem('apps_script_url') || 'https://script.google.com/macros/s/AKfycbwoQcaAc9f13OuP6Y94B-69epmjrWoFrFDGWic5I--HQbbmFAaQzY5xaDdxQVpyIp_VbA/exec';
@@ -508,7 +508,7 @@
         });
 
         async function fetchSheetData() {
-            // Endpoint Google Visualization API untuk membaca tab Data2
+            // Endpoint Google Visualization API untuk membaca tab Data3
             const gvizUrl = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_TAB_NAME)}&t=${Date.now()}`;
 
             try {
@@ -537,7 +537,7 @@
                 }).filter(item => item.nis !== '');
 
                 if (studentsData.length === 0) {
-                    throw new Error('Tab Data2 masih kosong');
+                    throw new Error('Tab Data3 masih kosong');
                 }
 
                 isDataLoaded = true;
@@ -576,7 +576,7 @@
             const nisInput = document.getElementById('inputNis').value.trim();
 
             if (!isDataLoaded) {
-                showLoginAlert('Sedang memuat data dari database Data2, harap tunggu sejenak...', 'warning');
+                showLoginAlert('Sedang memuat data dari database Data3, harap tunggu sejenak...', 'warning');
                 return;
             }
 
@@ -592,7 +592,7 @@
                 currentStudent = student;
                 showDocumentPage(student);
             } else {
-                showLoginAlert(`NIS <strong>"${escapeHtml(nisInput)}"</strong> tidak ditemukan pada tab Data2. Silakan coba NIS contoh: <strong>1001</strong>, <strong>1002</strong>, atau <strong>1003</strong>.`, 'error');
+                showLoginAlert(`NIS <strong>"${escapeHtml(nisInput)}"</strong> tidak ditemukan pada tab Data3. Silakan coba NIS contoh: <strong>1001</strong>, <strong>1002</strong>, atau <strong>1003</strong>.`, 'error');
             }
         }
 
@@ -686,7 +686,7 @@
             btn.innerHTML = `<span>Ya, Setuju Cetak</span> <i class="fa-solid fa-check text-xs"></i>`;
             closeApproveModal();
 
-            showSecurityToast('✓ Status "SETUJU CETAK" berhasil tersimpan di sistem tab Data2.');
+            showSecurityToast('✓ Status "SETUJU CETAK" berhasil tersimpan di sistem tab Data3.');
         }
 
         function openRevisionModal() {
@@ -730,7 +730,7 @@
             btn.innerHTML = `<span>Kirim Pengajuan Edit</span> <i class="fa-solid fa-paper-plane text-xs"></i>`;
             closeRevisionModal();
 
-            showSecurityToast('✓ Pengajuan edit dan alasan perbaikan berhasil disimpan ke sistem tab Data2.');
+            showSecurityToast('✓ Pengajuan edit dan alasan perbaikan berhasil disimpan ke sistem tab Data3.');
         }
 
         function showModalAlert(msg) {
@@ -740,7 +740,7 @@
         }
 
         /**
-         * Pengiriman Data Multi-Kanal ke Google Sheet (Tab Data2)
+         * Pengiriman Data Multi-Kanal ke Google Sheet (Tab Data3)
          * Menyimpan:
          * - Kolom D: Status ("SETUJU CETAK" / "PERLU EDIT KEMBALI")
          * - Kolom E: Alasan Edit Kembali
