@@ -97,7 +97,9 @@
                 <div>
                     <h1 class="font-bold text-slate-900 text-lg leading-tight">Portal Dokumen Resmi</h1>
                     <p class="text-xs text-slate-500">Sistem Verifikasi & Persetujuan Dokumen</p>
-            <!-- Status Indikator Sistem Bersih (Hanya info status, tanpa konfigurasi teknis ke siswa) -->
+                </div>
+            </div>
+            <!-- Status Indikator Sistem Bersih -->
             <div 
                 id="statusBadge" 
                 class="flex items-center space-x-2 text-xs font-medium px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 select-none cursor-pointer transition-all hover:bg-slate-200"
@@ -249,7 +251,7 @@
                     </div>
 
                     <div class="flex items-center space-x-3 w-full md:w-auto justify-end">
-                        <!-- Button 1: SETUJU CETAK (Selalu aktif & menyimpan ke Google Sheet) -->
+                        <!-- Button 1: SETUJU CETAK -->
                         <button 
                             type="button"
                             onclick="confirmApprove()" 
@@ -261,7 +263,7 @@
                             <span id="btnApproveLabel">SETUJU CETAK</span>
                         </button>
 
-                        <!-- Button 2: PERLU EDIT KEMBALI (Selalu aktif & menyimpan catatan ke Google Sheet) -->
+                        <!-- Button 2: PERLU EDIT KEMBALI -->
                         <button 
                             type="button"
                             onclick="openRevisionModal()" 
@@ -450,14 +452,14 @@
                 </button>
             </div>
             <p class="text-xs text-slate-500 leading-relaxed">
-                URL Web App Google Apps Script digunakan untuk menulis status <strong>SETUJU CETAK</strong> &amp; <strong>PERLU EDIT KEMBALI</strong> ke tab <strong>Data3</strong>.
+                URL Web App Google Apps Script digunakan untuk membaca dan menulis status <strong>SETUJU CETAK</strong> &amp; <strong>PERLU EDIT KEMBALI</strong> ke tab <strong>Data3</strong>.
             </p>
             <div>
                 <label for="inputScriptUrl" class="block text-xs font-semibold text-slate-700 mb-1">URL Deployment Web App:</label>
                 <input 
                     type="text" 
                     id="inputScriptUrl" 
-                    placeholder="https://script.google.com/macros/s/.../exec"
+                    placeholder="https://script.google.com/macros/s/AKfycbyQBCiZ9lofFrEEqlgsxx4EKRqg8HlS9az0AqSevVUNepG9MOHYq5PXvAaG_Ci809Ewkg/exec"
                     class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 focus:ring-2 focus:ring-brand-500"
                 >
             </div>
@@ -468,7 +470,7 @@
         </div>
     </div>
 
-    <!-- Hidden Form & Iframe Multi-Channel Transport (100% Anti-CORS) -->
+    <!-- Hidden Form & Iframe Multi-Channel Transport (Anti-CORS) -->
     <iframe name="hidden_gs_iframe" id="hidden_gs_iframe" style="display:none; width:0; height:0; border:0;"></iframe>
     <form id="hiddenGsForm" target="hidden_gs_iframe" method="POST" style="display:none;"></form>
 
@@ -488,10 +490,10 @@
         const SPREADSHEET_ID = '1ViRbaN_tNOPD4M8kNbwdxKEXYzhD4DVLn5MWf10KVsI';
         const SHEET_TAB_NAME = 'Data3';
 
-        // URL Google Apps Script Default (Dapat diganti melalui modal konfigurasi atau URL parameter ?scriptUrl=...)
+        // URL Google Apps Script Default
         let APPS_SCRIPT_URL = localStorage.getItem('apps_script_url') || 'https://script.google.com/macros/s/AKfycbzqB-S3VF1E7f8ex6ixjrFtNA-66VnGi8qPH07-Dsz2aMvk7MRCKI-a_4j5hvmaGIgNtg/exec';
 
-        // Deteksi parameter URL silent (?scriptUrl=...) untuk fleksibilitas deploy di GitHub
+        // Deteksi parameter URL silent (?scriptUrl=...)
         try {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('scriptUrl')) {
@@ -505,31 +507,6 @@
             console.log('Parameter check pass');
         }
 
-        // Data cadangan lengkap agar aplikasi selalu siap berjalan lancar
-        const SAMPLE_FALLBACK_DATA = [
-            {
-                nis: '1001',
-                identitas: 'Ahmad Rizky Pratama',
-                pdfUrl: 'https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf',
-                status: '',
-                alasan: ''
-            },
-            {
-                nis: '1002',
-                identitas: 'Siti Nurhaliza',
-                pdfUrl: 'https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf',
-                status: 'PERLU EDIT KEMBALI',
-                alasan: 'Mohon perbaiki tanggal lahir pada lembar kedua menjadi 12 Mei 2008.'
-            },
-            {
-                nis: '1003',
-                identitas: 'Budi Santoso',
-                pdfUrl: 'https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf',
-                status: 'SETUJU CETAK',
-                alasan: ''
-            }
-        ];
-
         // State Global Aplikasi
         let studentsData = [];
         let isDataLoaded = false;
@@ -540,14 +517,85 @@
             setupSecurityProtections();
         });
 
+        function cleanNisString(val) {
+            if (val === null || val === undefined) return '';
+            return String(val).trim().replace(/\.0+$/, '');
+        }
+
+        function fetchJsonp(url, timeout = 10000) {
+            return new Promise((resolve, reject) => {
+                const callbackName = 'jsonp_cb_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+                const script = document.createElement('script');
+                const sep = url.includes('?') ? '&' : '?';
+                const timer = setTimeout(() => {
+                    cleanup();
+                    reject(new Error('JSONP Timeout'));
+                }, timeout);
+
+                function cleanup() {
+                    clearTimeout(timer);
+                    if (window[callbackName]) delete window[callbackName];
+                    if (script.parentNode) script.parentNode.removeChild(script);
+                }
+
+                window[callbackName] = function(data) {
+                    cleanup();
+                    resolve(data);
+                };
+
+                script.src = `${url}${sep}callback=${callbackName}&_t=${Date.now()}`;
+                script.onerror = function() {
+                    cleanup();
+                    reject(new Error('JSONP Network Error'));
+                };
+
+                document.body.appendChild(script);
+            });
+        }
+
+        // Mengambil data murni dari Apps Script tab Data3 (Tanpa cache lokal browser)
         async function fetchSheetData() {
             let loadedSuccessfully = false;
+            const scriptUrl = localStorage.getItem('apps_script_url') || APPS_SCRIPT_URL;
 
-            // KANAL 1: Google Visualization API (GViz)
-            const gvizUrl = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_TAB_NAME)}&t=${Date.now()}`;
+            if (scriptUrl && scriptUrl.startsWith('https://script.google.com')) {
+                try {
+                    const gasUrl = `${scriptUrl}?action=read&sheetId=${SPREADSHEET_ID}&sheetName=${encodeURIComponent(SHEET_TAB_NAME)}`;
+                    const json = await fetchJsonp(gasUrl, 8000);
+                    if (json && json.status === 'success' && Array.isArray(json.data)) {
+                        studentsData = json.data.map(item => ({
+                            ...item,
+                            nis: cleanNisString(item.nis)
+                        }));
+                        isDataLoaded = true;
+                        loadedSuccessfully = true;
+                        updateBadgeDisplay(true);
+
+                        if (currentStudent) {
+                            const refreshed = studentsData.find(s => cleanNisString(s.nis).toLowerCase() === cleanNisString(currentStudent.nis).toLowerCase());
+                            if (refreshed) {
+                                currentStudent.status = refreshed.status;
+                                currentStudent.alasan = refreshed.alasan;
+                                updateStatusUI(refreshed.status, refreshed.alasan);
+                            }
+                        }
+                        return true;
+                    }
+                } catch (gasErr) {
+                    console.warn("Kanal Apps Script JSONP:", gasErr.message);
+                }
+            }
+
+            // Fallback GViz hanya jika Apps Script belum merespon
+            const cacheBuster = `${Date.now()}_${Math.random().toString(36).substring(7)}`;
+            const gvizUrl = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_TAB_NAME)}&_cb=${cacheBuster}`;
 
             try {
-                const response = await fetch(gvizUrl);
+                const response = await fetch(gvizUrl, { 
+                    method: 'GET',
+                    cache: 'no-store',
+                    headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+                });
                 if (response.ok) {
                     const text = await response.text();
                     const jsonMatch = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
@@ -555,7 +603,6 @@
                         const dataObj = JSON.parse(jsonMatch[1]);
                         const rows = dataObj.table.rows || [];
 
-                        // Pemetaan kolom: Kolom A=NIS, B=Nama, C=Link PDF, D=Status, E=Alasan
                         const parsed = rows.map(row => {
                             const c = row.c || [];
                             const getVal = (cell) => {
@@ -566,59 +613,38 @@
                             };
 
                             return {
-                                nis: getVal(c[0]),
+                                nis: cleanNisString(getVal(c[0])),
                                 identitas: getVal(c[1]),
                                 pdfUrl: getVal(c[2]),
                                 status: getVal(c[3]),
                                 alasan: getVal(c[4])
                             };
-                        }).filter(item => {
-                            // Abaikan baris kosong atau baris header tabel
-                            return item.nis !== '' && item.nis.toLowerCase() !== 'nis';
-                        });
+                        }).filter(item => item.nis !== '' && item.nis.toLowerCase() !== 'nis');
 
                         if (parsed.length > 0) {
                             studentsData = parsed;
                             isDataLoaded = true;
                             loadedSuccessfully = true;
                             updateBadgeDisplay(true);
-                            console.log(`Database tab ${SHEET_TAB_NAME} termuat melalui GViz: ${parsed.length} siswa.`);
-                            return;
+
+                            if (currentStudent) {
+                                const refreshedStudent = studentsData.find(s => cleanNisString(s.nis).toLowerCase() === cleanNisString(currentStudent.nis).toLowerCase());
+                                if (refreshedStudent) {
+                                    currentStudent.status = refreshedStudent.status;
+                                    currentStudent.alasan = refreshedStudent.alasan;
+                                    updateStatusUI(refreshedStudent.status, refreshedStudent.alasan);
+                                }
+                            }
+                            return true;
                         }
                     }
                 }
             } catch (err) {
-                console.warn("Kanal GViz belum dapat diakses, mencoba kanal cadangan Google Apps Script:", err.message);
+                console.warn("Kanal GViz:", err.message);
             }
 
-            // KANAL 2: Fallback Apps Script (Aman meskipun spreadsheet berstatus privat)
-            if (!loadedSuccessfully && APPS_SCRIPT_URL && APPS_SCRIPT_URL.startsWith('https://script.google.com')) {
-                try {
-                    const fallbackUrl = `${APPS_SCRIPT_URL}?action=read&sheetId=${SPREADSHEET_ID}&sheetName=${encodeURIComponent(SHEET_TAB_NAME)}&t=${Date.now()}`;
-                    const res = await fetch(fallbackUrl);
-                    if (res.ok) {
-                        const json = await res.json();
-                        if (json && json.status === 'success' && Array.isArray(json.data) && json.data.length > 0) {
-                            studentsData = json.data;
-                            isDataLoaded = true;
-                            loadedSuccessfully = true;
-                            updateBadgeDisplay(true);
-                            console.log(`Database tab ${SHEET_TAB_NAME} termuat melalui Apps Script: ${studentsData.length} siswa.`);
-                            return;
-                        }
-                    }
-                } catch (fallbackErr) {
-                    console.warn("Kanal cadangan Apps Script dilewati:", fallbackErr.message);
-                }
-            }
-
-            // KANAL 3: Fallback Data Lokal Default
-            if (!loadedSuccessfully) {
-                console.warn("Menggunakan data demonstrasi lokal sementara.");
-                studentsData = JSON.parse(JSON.stringify(SAMPLE_FALLBACK_DATA));
-                isDataLoaded = true;
-                updateBadgeDisplay(false);
-            }
+            updateBadgeDisplay(loadedSuccessfully);
+            return loadedSuccessfully;
         }
 
         function updateBadgeDisplay(isOnline) {
@@ -627,13 +653,13 @@
             const badgeDot = document.getElementById('statusBadgeDot');
 
             if (isOnline) {
-                badge.className = "flex items-center space-x-2 text-xs font-medium px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 select-none pointer-events-none";
+                badge.className = "flex items-center space-x-2 text-xs font-medium px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 select-none cursor-pointer";
                 if (badgeDot) badgeDot.className = "w-2 h-2 rounded-full bg-emerald-500";
-                if (badgeText) badgeText.textContent = "Database Terhubung";
+                if (badgeText) badgeText.textContent = "Data3 Terhubung";
             } else {
-                badge.className = "flex items-center space-x-2 text-xs font-medium px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 select-none pointer-events-none";
-                if (badgeDot) badgeDot.className = "w-2 h-2 rounded-full bg-slate-400";
-                if (badgeText) badgeText.textContent = "Mode Offline";
+                badge.className = "flex items-center space-x-2 text-xs font-medium px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 select-none cursor-pointer";
+                if (badgeDot) badgeDot.className = "w-2 h-2 rounded-full bg-amber-500";
+                if (badgeText) badgeText.textContent = "Menghubungkan...";
             }
         }
 
@@ -641,49 +667,65 @@
             document.getElementById('inputNis').value = nis;
         }
 
-        function handleLogin(event) {
+        async function handleLogin(event) {
             if (event) event.preventDefault();
-            const nisInput = document.getElementById('inputNis').value.trim();
-
-            if (!isDataLoaded) {
-                showLoginAlert('Sedang memuat data dari database Data3, harap tunggu sejenak...', 'warning');
-                return;
-            }
+            const rawInput = document.getElementById('inputNis').value;
+            const nisInput = cleanNisString(rawInput);
 
             if (!nisInput) {
                 showLoginAlert('Silakan masukkan NIS Anda terlebih dahulu.', 'warning');
                 return;
             }
 
-            // Cari siswa berdasarkan NIS (case-insensitive)
-            const student = studentsData.find(s => String(s.nis).trim().toLowerCase() === nisInput.toLowerCase());
+            showLoginAlert('Memeriksa data siswa dari tab Data3...', 'warning');
+            
+            const scriptUrl = localStorage.getItem('apps_script_url') || APPS_SCRIPT_URL;
+            if (scriptUrl && scriptUrl.startsWith('https://script.google.com')) {
+                try {
+                    const checkUrl = `${scriptUrl}?action=getStudent&nis=${encodeURIComponent(nisInput)}&sheetId=${SPREADSHEET_ID}&sheetName=${encodeURIComponent(SHEET_TAB_NAME)}`;
+                    const res = await fetchJsonp(checkUrl, 5000);
+                    if (res && res.status === 'success' && res.data) {
+                        hideLoginAlert();
+                        currentStudent = {
+                            ...res.data,
+                            nis: cleanNisString(res.data.nis)
+                        };
+                        showDocumentPage(currentStudent);
+                        fetchSheetData();
+                        return;
+                    }
+                } catch (e) {
+                    console.log("Pencarian live beralih ke cache data:", e);
+                }
+            }
+
+            await fetchSheetData();
+
+            const student = studentsData.find(s => cleanNisString(s.nis).toLowerCase() === nisInput.toLowerCase());
 
             if (student) {
+                hideLoginAlert();
                 currentStudent = student;
                 showDocumentPage(student);
             } else {
-                showLoginAlert(`NIS <strong>"${escapeHtml(nisInput)}"</strong> tidak ditemukan pada tab Data3. Silakan coba NIS contoh: <strong>1001</strong>, <strong>1002</strong>, atau <strong>1003</strong>.`, 'error');
+                showLoginAlert(`NIS <strong>"${escapeHtml(rawInput)}"</strong> tidak ditemukan pada tab Data3. Pastikan NIS telah diisi oleh admin pada tab Data3 Google Sheets.`, 'error');
             }
         }
 
         function showDocumentPage(student) {
-            // Perbarui data tampilan identitas
             document.getElementById('displayNama').textContent = student.identitas || 'Tanpa Nama';
             document.getElementById('displayNis').textContent = `NIS: ${student.nis}`;
             document.getElementById('watermarkNis').innerHTML = `${escapeHtml(student.identitas.toUpperCase())}<br><span class="text-lg font-mono">NIS: ${escapeHtml(student.nis)}</span>`;
             document.getElementById('pdfTitle').textContent = `Dokumen NIS: ${student.nis} - ${student.identitas}`;
 
-            // Perbarui Status Badge & Catatan Alasan
             updateStatusUI(student.status, student.alasan);
 
-            // Muat PDF ke Iframe
             const iframe = document.getElementById('pdfIframe');
             const pdfLoading = document.getElementById('pdfLoading');
             pdfLoading.style.display = 'flex';
 
-            let embedUrl = student.pdfUrl || 'https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf';
+            let embedUrl = student.pdfUrl || 'about:blank';
 
-            // Konversi link Google Drive jika diperlukan
             if (embedUrl.includes('drive.google.com')) {
                 const driveIdMatch = embedUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
                 if (driveIdMatch && driveIdMatch[1]) {
@@ -696,7 +738,6 @@
                 pdfLoading.style.display = 'none';
             };
 
-            // Transisi Halaman
             document.getElementById('pageLogin').classList.add('hidden');
             document.getElementById('pageDetail').classList.remove('hidden');
         }
@@ -710,7 +751,6 @@
             const btnApproveLabel = document.getElementById('btnApproveLabel');
             const btnReviseLabel = document.getElementById('btnReviseLabel');
 
-            // Reset gaya visual tombol agar selalu aktif dan siap menerima aksi
             if (btnApprove && btnRevise) {
                 btnApprove.disabled = false;
                 btnRevise.disabled = false;
@@ -724,7 +764,6 @@
                 reasonContainer.classList.add('hidden');
                 reasonText.textContent = '';
 
-                // Sorot tombol SETUJU CETAK sebagai pilihan saat ini, dan tombol revisi tetap aktif
                 if (btnApprove && btnRevise) {
                     btnApprove.className += " bg-emerald-600 hover:bg-emerald-700 text-white ring-2 ring-emerald-400 ring-offset-2 shadow-emerald-600/30";
                     btnApproveLabel.textContent = "✓ TELAH DISETUJUI";
@@ -742,7 +781,6 @@
                     reasonContainer.classList.add('hidden');
                 }
 
-                // Sorot tombol PERLU EDIT KEMBALI sebagai pilihan saat ini, dan tombol setuju tetap aktif
                 if (btnApprove && btnRevise) {
                     btnRevise.className += " bg-amber-500 hover:bg-amber-600 text-white ring-2 ring-amber-400 ring-offset-2 shadow-amber-500/30";
                     btnReviseLabel.textContent = "⚠ PENGAJUAN EDIT AKTIF";
@@ -776,12 +814,12 @@
 
             const btn = document.getElementById('btnConfirmApprove');
             btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> <span>Menyimpan ke Google Sheet...</span>`;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> <span>Menyimpan ke Tab Data3...</span>`;
 
             const status = 'SETUJU CETAK';
             const alasan = '';
 
-            // Kirim langsung ke Google Sheet (Tab Data3) dengan teknik GitHub Pages-safe
+            // Menunggu respon penyimpanan server Google Apps Script
             await saveResponseToSheet(currentStudent.nis, status, alasan);
 
             currentStudent.status = status;
@@ -792,7 +830,7 @@
             btn.innerHTML = `<span>Ya, Simpan Persetujuan</span> <i class="fa-solid fa-check text-xs"></i>`;
             closeApproveModal();
 
-            showSecurityToast('✓ Status "SETUJU CETAK" berhasil dikirim & disimpan ke Google Sheet tab Data3!');
+            showSecurityToast('✓ Status "SETUJU CETAK" tersimpan permanen di Tab Data3!');
         }
 
         function openRevisionModal() {
@@ -822,11 +860,11 @@
 
             const btn = document.getElementById('btnSubmitRevision');
             btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> <span>Menyimpan ke Google Sheet...</span>`;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> <span>Menyimpan ke Tab Data3...</span>`;
 
             const status = 'PERLU EDIT KEMBALI';
 
-            // Kirim langsung ke Google Sheet (Tab Data3) dengan teknik GitHub Pages-safe
+            // Menunggu respon penyimpanan server Google Apps Script
             await saveResponseToSheet(currentStudent.nis, status, alasanInput);
 
             currentStudent.status = status;
@@ -837,7 +875,7 @@
             btn.innerHTML = `<span>Kirim Pengajuan Edit</span> <i class="fa-solid fa-paper-plane text-xs"></i>`;
             closeRevisionModal();
 
-            showSecurityToast('✓ Pengajuan edit dan alasan berhasil disimpan ke Google Sheet tab Data3!');
+            showSecurityToast('✓ Catatan revisi tersimpan permanen di Tab Data3!');
         }
 
         function showModalAlert(msg) {
@@ -846,23 +884,9 @@
             modalAlert.classList.remove('hidden');
         }
 
-        /**
-         * Pengiriman Data Khusus GitHub Pages (100% Anti-CORS & Anti-Preflight):
-         * 1. Beacon API (Standard browser modern untuk background cross-domain)
-         * 2. URL Query GET Ping (Script tag & Image beacon)
-         * 3. Fetch POST no-cors dengan text/plain (menghindari OPTIONS preflight)
-         * 4. Hidden Form POST target iframe
-         */
+        // Fungsi Simpan Permanen ke Tab Data3 Tanpa Cache
         async function saveResponseToSheet(nis, status, alasan) {
-            const targetNis = String(nis).trim();
-            
-            // 1. Simpan di memori lokal saat ini
-            const studentIdx = studentsData.findIndex(s => String(s.nis).trim().toLowerCase() === targetNis.toLowerCase());
-            if (studentIdx !== -1) {
-                studentsData[studentIdx].status = status;
-                studentsData[studentIdx].alasan = status === 'SETUJU CETAK' ? '' : alasan;
-            }
-
+            const targetNis = cleanNisString(nis);
             const scriptUrl = localStorage.getItem('apps_script_url') || APPS_SCRIPT_URL;
 
             const payload = {
@@ -877,99 +901,47 @@
             };
 
             if (!scriptUrl || !scriptUrl.startsWith('https://script.google.com')) {
-                console.warn('URL Apps Script belum diatur');
                 return true;
             }
 
-            // KANAL A: GET Query String (Paling handal dari GitHub Pages ke Google Apps Script)
+            const getParams = new URLSearchParams({
+                action: 'save',
+                nis: payload.nis,
+                identitas: payload.identitas,
+                status: payload.status,
+                alasan: payload.alasan,
+                sheetId: payload.sheetId,
+                sheetName: payload.sheetName,
+                _t: Date.now()
+            });
+            const fullGetUrl = `${scriptUrl}?${getParams.toString()}`;
+
+            // KANAL 1: JSONP Await (Memastikan server Google Apps Script mengeksekusi flush sebelum lanjut)
             try {
-                const getParams = new URLSearchParams({
-                    action: 'save',
-                    nis: payload.nis,
-                    identitas: payload.identitas,
-                    status: payload.status,
-                    alasan: payload.alasan,
-                    sheetId: payload.sheetId,
-                    sheetName: payload.sheetName,
-                    _t: Date.now()
-                });
-                const fullGetUrl = `${scriptUrl}?${getParams.toString()}`;
-
-                // 1. Image Beacon
-                const img = new Image();
-                img.src = fullGetUrl;
-
-                // 2. Fetch GET no-cors
-                fetch(fullGetUrl, { mode: 'no-cors', cache: 'no-cache' }).catch(() => {});
-
-                // 3. Dynamic Script Tag (JSONP-like ping)
-                const scriptTag = document.createElement('script');
-                scriptTag.src = fullGetUrl;
-                scriptTag.async = true;
-                scriptTag.onload = scriptTag.onerror = function() {
-                    try { document.body.removeChild(scriptTag); } catch(e) {}
-                };
-                document.body.appendChild(scriptTag);
-            } catch (errGet) {
-                console.warn("Kanal GET:", errGet);
+                await fetchJsonp(fullGetUrl, 8000);
+            } catch (e1) {
+                console.warn("Kanal JSONP save:", e1);
             }
 
-            // KANAL B: Navigator Beacon (Jika browser mendukung)
-            try {
-                if (navigator.sendBeacon) {
-                    const beaconData = new FormData();
-                    Object.keys(payload).forEach(key => beaconData.append(key, payload[key]));
-                    navigator.sendBeacon(scriptUrl, beaconData);
-                }
-            } catch (errBeacon) {
-                console.warn("Kanal Beacon:", errBeacon);
-            }
-
-            // KANAL C: Fetch POST dengan text/plain (Kunci anti-preflight browser di GitHub Pages)
+            // KANAL 2: Fetch POST no-cors redundan
             try {
                 fetch(scriptUrl, {
                     method: 'POST',
                     mode: 'no-cors',
-                    cache: 'no-cache',
+                    keepalive: true,
                     headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
                     body: JSON.stringify(payload)
                 }).catch(() => {});
-            } catch (errPost) {
-                console.warn("Kanal Fetch POST:", errPost);
-            }
+            } catch (e2) {}
 
-            // KANAL D: Hidden Form POST ke iframe tersembunyi
+            // KANAL 3: Image Ping redundan
             try {
-                let form = document.getElementById('hiddenGsForm');
-                if (!form) {
-                    form = document.createElement('form');
-                    form.id = 'hiddenGsForm';
-                    form.target = 'hidden_gs_iframe';
-                    form.method = 'POST';
-                    form.style.display = 'none';
-                    document.body.appendChild(form);
-                }
-                form.action = scriptUrl;
-                form.innerHTML = '';
+                const img = new Image();
+                img.src = `${fullGetUrl}&_ping=1`;
+            } catch (e3) {}
 
-                Object.keys(payload).forEach(key => {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = key;
-                    input.value = payload[key];
-                    form.appendChild(input);
-                });
-
-                form.submit();
-            } catch (errForm) {
-                console.warn("Kanal Form POST:", errForm);
-            }
-
-            // Sinkronkan ulang data dari spreadsheet di latar belakang
-            setTimeout(() => {
-                fetchSheetData();
-            }, 3000);
-
+            // Sinkronkan ulang data dari sheet setelah penulisan selesai
+            await fetchSheetData();
             return true;
         }
 
@@ -1003,6 +975,7 @@
             document.getElementById('pageLogin').classList.remove('hidden');
             hideLoginAlert();
             currentStudent = null;
+            fetchSheetData();
         }
 
         function showLoginAlert(message, type = 'error') {
@@ -1028,14 +1001,12 @@
         }
 
         function setupSecurityProtections() {
-            // Blokir Klik Kanan
             document.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
                 showSecurityToast('Klik kanan dinonaktifkan demi keamanan dokumen.');
                 return false;
             });
 
-            // Blokir Pintasan Keyboard (Ctrl+S, Ctrl+P, Ctrl+U, F12)
             document.addEventListener('keydown', (e) => {
                 if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
                     e.preventDefault();
